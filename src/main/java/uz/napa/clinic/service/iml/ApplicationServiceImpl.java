@@ -1,0 +1,504 @@
+package uz.napa.clinic.service.iml;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import uz.napa.clinic.entity.Application;
+import uz.napa.clinic.entity.Document;
+import uz.napa.clinic.entity.Section;
+import uz.napa.clinic.entity.User;
+import uz.napa.clinic.entity.enums.ApplicationStatus;
+import uz.napa.clinic.entity.enums.DocumentStatus;
+import uz.napa.clinic.entity.enums.UserStatus;
+import uz.napa.clinic.exception.BadRequestException;
+import uz.napa.clinic.payload.*;
+import uz.napa.clinic.projection.*;
+import uz.napa.clinic.projection.ICustomAge;
+import uz.napa.clinic.repository.*;
+import uz.napa.clinic.service.ApplicationService;
+import uz.napa.clinic.utils.CommonUtils;
+
+import javax.persistence.EntityManager;
+import java.sql.Timestamp;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Service
+public class ApplicationServiceImpl implements ApplicationService {
+    private final ApplicationRepository applicationRepository;
+    private final SectionServiceImpl sectionService;
+    private final AttachmentRepository attachmentRepository;
+    private final UserRepository userRepository;
+    private final DocumentRepository documentRepository;
+    private final EntityManager entityManager;
+    private final RegionRepository regionRepository;
+    private final SectionRepository sectionRepository;
+
+    public ApplicationServiceImpl(ApplicationRepository applicationRepository, SectionServiceImpl sectionService, AttachmentRepository attachmentRepository, UserRepository userRepository, DocumentRepository documentRepository, EntityManager entityManager, RegionRepository regionRepository, SectionRepository sectionRepository) {
+        this.applicationRepository = applicationRepository;
+        this.sectionService = sectionService;
+        this.attachmentRepository = attachmentRepository;
+        this.userRepository = userRepository;
+        this.documentRepository = documentRepository;
+        this.entityManager = entityManager;
+        this.regionRepository = regionRepository;
+        this.sectionRepository = sectionRepository;
+    }
+
+    //Ariza yaratish
+    @Override
+    public ApiResponse create(ApplicationRequest request) {
+        try {
+            Application application = new Application();
+            fromRequest(application, request);
+            Application savedApplication = applicationRepository.save(application);
+            Document document = new Document();
+            document.setStatus(DocumentStatus.CREATED);
+            document.setSection(sectionRepository.findById(request.getSectionId()).orElseThrow(() -> new IllegalStateException("Section not found for create application!!!")));
+            document.setApplication(savedApplication);
+            User freeUser = userRepository.findFreeUser(request.getSectionId());
+            if (freeUser != null) {
+                document.setCheckedBy(freeUser);
+            } else {
+                User leastUser = userRepository.findUserBySectionId(request.getSectionId());
+                if (leastUser != null) {
+                    document.setCheckedBy(leastUser);
+                } else {
+                    document.setStatus(DocumentStatus.FORWARD_TO_MODERATOR);
+                }
+            }
+            documentRepository.save(document);
+            return new ApiResponse("Application accepted ", true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ApiResponse("Application do not created!!!", false);
+        }
+
+    }
+
+    //Ariza o'zgartirish
+    @Override
+    public ApiResponse update(UUID id, ApplicationRequest request) {
+        Optional<Application> findApplication = applicationRepository.findById(id);
+        if (findApplication.isPresent()) {
+            applicationRepository.save(fromRequest(findApplication.get(), request));
+            return new ApiResponse("Application updated ", true);
+        } else {
+            throw new BadRequestException("Application not found with ID " + id);
+        }
+    }
+
+
+    @Override
+    public ApplicationResponse getOne(UUID id) {
+        Optional<Application> findApplication = applicationRepository.findById(id);
+        if (findApplication.isPresent()) {
+            return ApplicationResponse.fromEntity(findApplication.get());
+        } else {
+            throw new BadRequestException("Application not found with ID " + id);
+        }
+    }
+
+    @Override
+    public ApiResponse delete(UUID id) {
+        Optional<Application> findApplication = applicationRepository.findById(id);
+        if (findApplication.isPresent()) {
+            Application application = findApplication.get();
+            application.setDeleted(true);
+            applicationRepository.save(application);
+            return new ApiResponse("Application deleted with ID: " + id, true);
+        } else {
+            throw new BadRequestException("Application not found with ID " + id);
+        }
+    }
+
+    //Arizalar  royxatini olish
+    @Override
+    public List<ApplicationResponse> list() {
+        List<Application> allApplication = applicationRepository.findAll();
+        return allApplication.stream().map(ApplicationResponse::fromEntity).collect(Collectors.toList());
+    }
+
+    @Override
+    public ResPageable getMyApplications(int page, int size, User user) {
+        if (user != null) {
+            Pageable pageable = CommonUtils.getPageable(page, size);
+            Page<Application> applicationPage = applicationRepository.findAllByCreatedByAndDeletedFalse(user, pageable);
+            return new ResPageable(
+                    applicationPage.getContent().stream().map(ApplicationResponse::fromEntity).collect(Collectors.toList()),
+                    page,
+                    applicationPage.getTotalPages(),
+                    applicationPage.getTotalElements()
+            );
+        } else {
+            throw new BadRequestException("User Not found ");
+        }
+
+    }
+
+    @Override
+    public ResPageable getAllUnCheckedByListener(int page, int size, User user) {
+        Pageable pageable = CommonUtils.getPageable(page, size);
+        Page<Document> uncheckedApplicationByListener = documentRepository.findByCheckedByAndStatusAndDeletedFalseAndAnswerIsNull(user, DocumentStatus.CREATED, pageable);
+        List<ApplicationResponse> applications = uncheckedApplicationByListener.stream().map(document -> ApplicationResponse.fromEntity(document.getApplication())).collect(Collectors.toList());
+        return new ResPageable(
+                applications,
+                page,
+                uncheckedApplicationByListener.getTotalPages(),
+                uncheckedApplicationByListener.getTotalElements()
+        );
+    }
+
+    @Override
+    public ResPageable getAllCheckedByListener(int page, int size, User user) {
+        Pageable pageable = CommonUtils.getPageable(page, size);
+        Page<Document> checkedByListener = documentRepository.findByCheckedByAndStatusAndDeletedFalseAndAnswerIsNull(user, DocumentStatus.COMPLETED, pageable);
+        List<ApplicationResponse> applications = checkedByListener.getContent().stream().map(document -> ApplicationResponse.fromEntity(document.getApplication())).collect(Collectors.toList());
+        return new ResPageable(
+                applications,
+                page,
+                checkedByListener.getTotalPages(),
+                checkedByListener.getTotalElements()
+        );
+    }
+
+
+    @Override
+    public ApiResponse acceptedApplicationByListener(UUID id, User user) {
+        Optional<Application> findApplication = applicationRepository.findById(id);
+        if (findApplication.isPresent()) {
+            Document findDocument = documentRepository.findByApplicationAndDeletedFalseAndStatus(findApplication.get(), DocumentStatus.CREATED);
+            Application application = findApplication.get();
+            application.setStatus(ApplicationStatus.INPROCESS);
+            findDocument.setStatus(DocumentStatus.INPROCESS);
+            applicationRepository.save(application);
+            documentRepository.save(findDocument);
+            return new ApiResponse("Application accepted ", true);
+        } else {
+            throw new BadRequestException("Application not found with ID " + id);
+        }
+    }
+
+    @Override
+    public ApiResponse ignoredApplicationByListener(UUID id, Commit message, User user) {
+        Optional<Application> byId = applicationRepository.findById(id);
+        if (byId.isPresent()) {
+
+            Document findDocument = documentRepository.findByApplicationAndDeletedFalseAndStatus(byId.get(), DocumentStatus.CREATED);
+            if (findDocument != null) {
+                findDocument.setStatus(DocumentStatus.FORWARD_TO_SUPER_MODERATOR);
+                findDocument.setForwardMessage(message.getComment());
+                documentRepository.save(findDocument);
+                return new ApiResponse("Application forward to Moderator", true);
+            } else {
+                throw new BadRequestException("Documet not found with ID " + id);
+            }
+        } else {
+            throw new BadRequestException("Application not found with ID " + id);
+        }
+
+    }
+
+    @Override
+    public List<ApplicationResponse> topList() {
+        return applicationRepository.getTopByRandom().stream().map(ApplicationResponse::fromEntity).collect(Collectors.toList());
+    }
+
+    @Override
+    public ResPageable listByListener(User user, int page, int size) {
+        Pageable pageable = CommonUtils.getPageable(page, size);
+        Page<Document> uncheckedDocuments = documentRepository.findByCheckedByAndStatusAndDeletedFalseAndAnswerIsNull(user, DocumentStatus.INPROCESS, pageable);
+        List<ApplicationResponse> applications = uncheckedDocuments.getContent().stream().map(document -> ApplicationResponse.fromEntity(document.getApplication())).collect(Collectors.toList());
+
+        return new ResPageable(
+                applications,
+                page,
+                uncheckedDocuments.getTotalPages(),
+                uncheckedDocuments.getTotalElements()
+        );
+    }
+
+    @Override
+    public List<CustomInfoRegion> getByRegion() {
+        return regionRepository.getCountByRegion();
+    }
+
+    @Override
+    public List<CustomAge> getByAge() {
+        List<ICustomAge> count1 = applicationRepository.getCount(0, 18);
+        List<CustomAge> customAges = new ArrayList<>();
+
+        for (ICustomAge customAge : count1) {
+            CustomAge age = new CustomAge();
+            CustomAgeCount customAgeCount = new CustomAgeCount();
+            customAgeCount.setAge("fromZeroToSeventeen");
+            customAgeCount.setCount(customAge.getCount());
+            age.setRegionId(customAge.getRegionId());
+            age.setCounts(Collections.singletonList(customAgeCount));
+            customAges.add(age);
+        }
+        List<ICustomAge> count2 = applicationRepository.getCount(17, 31);
+        for (ICustomAge customAge : count2) {
+            CustomAge age = new CustomAge();
+            CustomAgeCount customAgeCount = new CustomAgeCount();
+            customAgeCount.setAge("fromEighteenToThirty");
+            customAgeCount.setCount(customAge.getCount());
+            age.setRegionId(customAge.getRegionId());
+            age.setCounts(Collections.singletonList(customAgeCount));
+            customAges.add(age);
+        }
+        List<ICustomAge> count3 = applicationRepository.getCount(30, 46);
+        for (ICustomAge customAge : count3) {
+            CustomAge age = new CustomAge();
+            CustomAgeCount customAgeCount = new CustomAgeCount();
+            customAgeCount.setAge("fromThirtyOneToFortyFive");
+            customAgeCount.setCount(customAge.getCount());
+            age.setRegionId(customAge.getRegionId());
+            age.setCounts(Collections.singletonList(customAgeCount));
+            customAges.add(age);
+        }
+        List<ICustomAge> count4 = applicationRepository.getCount(45, 60);
+        for (ICustomAge customAge : count4) {
+            CustomAge age = new CustomAge();
+            CustomAgeCount customAgeCount = new CustomAgeCount();
+            customAgeCount.setAge("fromFortySixToSixty");
+            customAgeCount.setCount(customAge.getCount());
+            age.setRegionId(customAge.getRegionId());
+            age.setCounts(Collections.singletonList(customAgeCount));
+            customAges.add(age);
+        }
+        List<ICustomAge> count5 = applicationRepository.getCount(60, 101);
+        for (ICustomAge customAge : count5) {
+            CustomAge age = new CustomAge();
+            CustomAgeCount customAgeCount = new CustomAgeCount();
+            customAgeCount.setAge("fromSixtyOne");
+            customAgeCount.setCount(customAge.getCount());
+            age.setRegionId(customAge.getRegionId());
+            age.setCounts(Collections.singletonList(customAgeCount));
+            customAges.add(age);
+        }
+
+        List<CustomAge> list = new ArrayList<>();
+
+        boolean isNot = false;
+        for (CustomAge customAge : customAges) {
+            if (!list.isEmpty()) {
+                for (int i = 0; i < list.size(); i++) {
+                    if (list.get(i).getRegionId().equals(customAge.getRegionId())) {
+                        isNot = true;
+                    }
+                }
+                if (!isNot) {
+                    CustomAge age = new CustomAge();
+                    List<CustomAgeCount> counts = new ArrayList<>();
+                    for (CustomAge customAge1 : customAges) {
+                        CustomAgeCount countSection = new CustomAgeCount();
+                        if (customAge.getRegionId().equals(customAge1.getRegionId())) {
+                            countSection = customAge1.getCounts().get(0);
+                            counts.add(countSection);
+                        }
+
+                    }
+                    age.setRegionId(customAge.getRegionId());
+                    age.setCounts(counts);
+                    list.add(age);
+                }
+                isNot = false;
+            } else {
+                CustomAge age = new CustomAge();
+                List<CustomAgeCount> counts = new ArrayList<>();
+                for (CustomAge customAge1 : customAges) {
+                    CustomAgeCount count = new CustomAgeCount();
+                    if (customAge.getRegionId().equals(customAge1.getRegionId())) {
+                        count = customAge1.getCounts().get(0);
+                        counts.add(count);
+                    }
+                }
+                age.setRegionId(customAge.getRegionId());
+                age.setCounts(counts);
+                list.add(age);
+            }
+        }
+        return list;
+
+//        byAge.put("fromZeroToSeventeen", 0L);
+//        byAge.put("fromEighteenToThirty", 0L);
+//        byAge.put("fromThirtyOneToFortyFive", 0L);
+//        byAge.put("fromFortySixToSixty", 0L);
+//        byAge.put("fromSixtyOne", 0L);
+    }
+
+    @Override
+    public List<CustomGender> getByGender() {
+        return applicationRepository.getByGender();
+    }
+
+    @Override
+    public List<CustomInfoRegion> getByDenied() {
+        return applicationRepository.getByDenied();
+    }
+
+    @Override
+    public List<CustomInfoStatus> getByStatus() {
+        return applicationRepository.getByStatus();
+    }
+
+    @Override
+    public List<SectionStatusCount> getBySection() {
+        List<CustomInfoSection> bySection = applicationRepository.getBySection();
+        List<SectionStatusCount> list = new ArrayList<>();
+        boolean isNot = false;
+        for (CustomInfoSection customInfoSection : bySection) {
+            if (!list.isEmpty()) {
+                for (int i = 0; i < list.size(); i++) {
+                    if (list.get(i).getRegionId().equals(customInfoSection.getRegionId())) {
+                        isNot = true;
+                    }
+                }
+                if (!isNot) {
+                    SectionStatusCount statusCount = new SectionStatusCount();
+                    List<CustomCountSection> counts = new ArrayList<>();
+                    for (CustomInfoSection infoSection : bySection) {
+                        CustomCountSection countSection = new CustomCountSection();
+                        if (customInfoSection.getRegionId().equals(infoSection.getRegionId())) {
+                            countSection.setCount(infoSection.getCount());
+                            countSection.setSectionId(infoSection.getSectionId());
+                            counts.add(countSection);
+                        }
+
+                    }
+                    statusCount.setRegionId(customInfoSection.getRegionId());
+                    statusCount.setCounts(counts);
+                    list.add(statusCount);
+                }
+                isNot = false;
+            } else {
+                SectionStatusCount statusCount = new SectionStatusCount();
+                List<CustomCountSection> counts = new ArrayList<>();
+                for (CustomInfoSection infoSection : bySection) {
+                    CustomCountSection count = new CustomCountSection();
+                    if (customInfoSection.getRegionId().equals(infoSection.getRegionId())) {
+                        count.setCount(infoSection.getCount());
+                        count.setSectionId(infoSection.getSectionId());
+                        counts.add(count);
+                    }
+                }
+                statusCount.setRegionId(customInfoSection.getRegionId());
+                statusCount.setCounts(counts);
+                list.add(statusCount);
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public List<CustomInfoSocialStatus> getBySocialStatus() {
+        return applicationRepository.getBySocialStatus();
+    }
+
+    @Override
+    public List<CustomInfoYear> getByYear() {
+        return applicationRepository.getByYear();
+    }
+
+    @Override
+    public List<ListenerStatusCount> getInfoListener() {
+        List<CustomInfoListener> infoListener = applicationRepository.getInfoListener();
+        List<ListenerStatusCount> list = new ArrayList<>();
+        for (CustomInfoListener customInfoListener : infoListener) {
+            if (!list.isEmpty()) {
+                for (int i = 0; i < list.size(); i++) {
+                    if (!list.get(i).getListener().getPhoneNumber().equals(customInfoListener.getNumber())) {
+                        ListenerStatusCount userTest = new ListenerStatusCount();
+                        List<CustomCount> counts = new ArrayList<>();
+                        for (CustomInfoListener listener : infoListener) {
+                            CustomCount count = new CustomCount();
+                            if (customInfoListener.getNumber().equals(listener.getNumber())) {
+                                count.setStatus(listener.getStatus());
+                                count.setCount(listener.getCount());
+                                counts.add(count);
+                            }
+
+                        }
+                        Optional<User> byPhoneNumber = userRepository.findByPhoneNumber(customInfoListener.getNumber());
+                        if (byPhoneNumber.isPresent()) {
+                            userTest.setListener(ListenerResponse.fromEntity(byPhoneNumber.get()));
+                            userTest.setCounts(counts);
+                        }
+                        list.add(userTest);
+                    }
+                }
+            } else {
+                ListenerStatusCount userTest = new ListenerStatusCount();
+                List<CustomCount> counts = new ArrayList<>();
+                for (CustomInfoListener listener : infoListener) {
+                    CustomCount count = new CustomCount();
+                    if (customInfoListener.getNumber().equals(listener.getNumber())) {
+                        count.setStatus(listener.getStatus());
+                        count.setCount(listener.getCount());
+                        counts.add(count);
+                    }
+
+                }
+                Optional<User> byPhoneNumber = userRepository.findByPhoneNumber(customInfoListener.getNumber());
+                if (byPhoneNumber.isPresent()) {
+                    userTest.setListener(ListenerResponse.fromEntity(byPhoneNumber.get()));
+                    userTest.setCounts(counts);
+                }
+                list.add(userTest);
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public List<CustomUserInfo> getInfoApplicant() {
+        List<CustomInfoApplicant> infoApplicant = applicationRepository.getInfoApplicant();
+        List<CustomUserInfo> userInfos = new ArrayList<>();
+        for (CustomInfoApplicant customInfoApplicant : infoApplicant) {
+            CustomUserInfo userInfo = new CustomUserInfo();
+            Optional<User> byPhoneNumber = userRepository.findByPhoneNumber(customInfoApplicant.getNumber());
+            if (byPhoneNumber.isPresent()) {
+                userInfo.setUser(byPhoneNumber.get());
+                userInfo.setCount(customInfoApplicant.getCount());
+            }
+            userInfos.add(userInfo);
+        }
+        return userInfos;
+    }
+
+    private Application fromRequest(Application application, ApplicationRequest request) {
+        application.setTitle(request.getTitle());
+        application.setDescription(request.getDescription());
+        application.setStatus(ApplicationStatus.CREATED);
+        if (application.getId() != null) {
+            application.setDeadline(request.getDeadline());
+        } else {
+            application.setDeadline(addDays(new Timestamp(new Date().getTime()), 15));
+        }
+        if (!request.getAttachmentId().isEmpty()) {
+            application.setAttachments(attachmentRepository.findAllById(request.getAttachmentId()));
+        }
+        if (request.getVideoId() != null) {
+            application.setVideo(attachmentRepository.findById(request.getVideoId())
+                    .orElseThrow(() -> new IllegalStateException("Video not found for application")));
+        }
+        if (request.getAudioId() != null) {
+            application.setAudio(attachmentRepository.findById(request.getAudioId())
+                    .orElseThrow(() -> new IllegalStateException("Audio not found for application")));
+        }
+        application.setSection(entityManager.getReference(Section.class, request.getSectionId()));
+        if (request.getTop() != null) {
+            application.setTop(request.getTop());
+        }
+        return application;
+    }
+
+    public Timestamp addDays(Timestamp date, int days) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);// w ww.  j ava  2  s  .co m
+        cal.add(Calendar.DATE, days); //minus number would decrement the days
+        return new Timestamp(cal.getTime().getTime());
+
+    }
+}
