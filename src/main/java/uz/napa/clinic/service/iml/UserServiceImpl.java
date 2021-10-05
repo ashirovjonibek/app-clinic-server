@@ -63,10 +63,11 @@ public class UserServiceImpl implements UserService {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getPhoneNumber(), loginRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         User user = ((CustomUserDetails) authentication.getPrincipal()).getUser();
+
         if (user.isDeleted()) {
             throw new BadRequestException("You blocked By Admin");
         }
-        if (!user.isViewed()) {
+        if (user.getStatus().equals(UserStatus.LISTENER)&&!user.isViewed()) {
             throw new BadRequestException("User not viewed");
         }
         String token = jwtTokenProvider.generateToken(authentication);
