@@ -66,6 +66,9 @@ public class UserServiceImpl implements UserService {
         if (user.isDeleted()) {
             throw new BadRequestException("You blocked By Admin");
         }
+        if (!user.isViewed()) {
+            throw new BadRequestException("User not viewed");
+        }
         String token = jwtTokenProvider.generateToken(authentication);
         return new JwtResponse(token);
 
