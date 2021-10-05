@@ -123,7 +123,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     public ResPageable getMyApplications(int page, int size, User user) {
         if (user != null) {
             Pageable pageable = CommonUtils.getPageable(page, size);
-            Page<Application> applicationPage = applicationRepository.findAllByCreatedByAndDeletedFalse(user, pageable);
+            Page<Application> applicationPage = applicationRepository.findAllByCreatedByAndDeletedFalseOrderByCreatedAtDesc(user, pageable);
             return new ResPageable(
                     applicationPage.getContent().stream().map(ApplicationResponse::fromEntity).collect(Collectors.toList()),
                     page,
@@ -139,7 +139,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     public ResPageable getAllUnCheckedByListener(int page, int size, User user) {
         Pageable pageable = CommonUtils.getPageable(page, size);
-        Page<Document> uncheckedApplicationByListener = documentRepository.findByCheckedByAndStatusAndDeletedFalseAndAnswerIsNull(user, DocumentStatus.CREATED, pageable);
+        Page<Document> uncheckedApplicationByListener = documentRepository.findByCheckedByAndStatusAndDeletedFalseAndAnswerIsNullOrderByCreatedAtDesc(user, DocumentStatus.CREATED, pageable);
         List<ApplicationResponse> applications = uncheckedApplicationByListener.stream().map(document -> ApplicationResponse.fromEntity(document.getApplication())).collect(Collectors.toList());
         return new ResPageable(
                 applications,
@@ -152,7 +152,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     public ResPageable getAllCheckedByListener(int page, int size, User user) {
         Pageable pageable = CommonUtils.getPageable(page, size);
-        Page<Document> checkedByListener = documentRepository.findByCheckedByAndStatusAndDeletedFalseAndAnswerIsNull(user, DocumentStatus.COMPLETED, pageable);
+        Page<Document> checkedByListener = documentRepository.findByCheckedByAndStatusAndDeletedFalseAndAnswerIsNullOrderByCreatedAtDesc(user, DocumentStatus.COMPLETED, pageable);
         List<ApplicationResponse> applications = checkedByListener.getContent().stream().map(document -> ApplicationResponse.fromEntity(document.getApplication())).collect(Collectors.toList());
         return new ResPageable(
                 applications,
@@ -207,7 +207,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     public ResPageable listByListener(User user, int page, int size) {
         Pageable pageable = CommonUtils.getPageable(page, size);
-        Page<Document> uncheckedDocuments = documentRepository.findByCheckedByAndStatusAndDeletedFalseAndAnswerIsNull(user, DocumentStatus.INPROCESS, pageable);
+        Page<Document> uncheckedDocuments = documentRepository.findByCheckedByAndStatusAndDeletedFalseAndAnswerIsNullOrderByCreatedAtDesc(user, DocumentStatus.INPROCESS, pageable);
         List<ApplicationResponse> applications = uncheckedDocuments.getContent().stream().map(document -> ApplicationResponse.fromEntity(document.getApplication())).collect(Collectors.toList());
 
         return new ResPageable(

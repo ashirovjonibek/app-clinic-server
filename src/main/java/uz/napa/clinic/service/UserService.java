@@ -37,6 +37,8 @@ public interface UserService {
 
     List<ListenerResponse> userList(UserStatus status);
 
+    List<ListenerResponse> userListViewFalse(UserStatus status);
+
     void updateListenerByView(UUID id);
 
     List<ListenerResponse> getListenerRating();

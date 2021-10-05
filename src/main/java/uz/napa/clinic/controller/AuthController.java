@@ -32,6 +32,7 @@ public class AuthController {
     private static final String APPLICANT_LIST = "/applicants";
     private static final String LISTENER_LIST_BY_SECTION = "/listenerBySection";
     private static final String LISTENER_LIST = "/listeners";
+    private static final String LISTENER_LIST_VIEW_FALSE = "/listeners/view-false";
     private static final String ROLE_LIST = "/roles";
     private static final String UPDATE_LISTENER_BY_ROLE = "/update/listenerByRole";
     private static final String GET_BOSS = "/bosses";
@@ -168,6 +169,11 @@ public class AuthController {
     @GetMapping(LISTENER_LIST)
     public HttpEntity<?> getListenerList() {
         return ResponseEntity.ok(userService.userList(UserStatus.LISTENER));
+    }
+
+    @GetMapping(LISTENER_LIST_VIEW_FALSE)
+    public HttpEntity<?> getListenerList1() {
+        return ResponseEntity.ok(userService.userListViewFalse(UserStatus.LISTENER));
     }
 
     //Bo'lim boshliqlari listini olish

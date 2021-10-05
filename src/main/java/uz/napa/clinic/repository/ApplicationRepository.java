@@ -18,7 +18,7 @@ import java.util.UUID;
 public interface ApplicationRepository extends JpaRepository<Application, UUID> {
 
 
-    Page<Application> findAllByCreatedByAndDeletedFalse(User user, Pageable pageable);
+    Page<Application> findAllByCreatedByAndDeletedFalseOrderByCreatedAtDesc(User user, Pageable pageable);
 
     List<Application> findByCreatedByAndDeletedFalse(User user);
 

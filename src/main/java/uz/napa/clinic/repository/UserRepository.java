@@ -45,6 +45,10 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     List<User> findByStatusAndDeletedFalse(UserStatus status);
 
+    List<User> findByStatusAndDeletedFalseAndViewedTrue(UserStatus status);
+
+    List<User> findByStatusAndDeletedFalseAndViewedFalse(UserStatus status);
+
 
     @Query(nativeQuery = true, value = "select u.phone_number as number,COUNT(a.liked) from users u\n" +
             "left join answer a\n" +

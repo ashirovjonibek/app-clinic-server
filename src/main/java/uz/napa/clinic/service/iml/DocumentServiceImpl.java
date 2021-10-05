@@ -101,7 +101,7 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public ResPageable getBossAnswers(User user, int page, int size) {
         Pageable pageable = CommonUtils.getPageable(page, size);
-        Page<Document> allByAnswerIn = documentRepository.findByStatusAndDeletedFalseAndCheckedBySection(DocumentStatus.WAITING, user.getSection(), pageable);
+        Page<Document> allByAnswerIn = documentRepository.findByStatusAndDeletedFalseAndCheckedBySectionOrderByCreatedAtDesc(DocumentStatus.WAITING, user.getSection(), pageable);
         return new ResPageable(
                 allByAnswerIn.getContent().stream().map(DocumentResponse::fromEntity).collect(Collectors.toList()),
                 page,
@@ -132,7 +132,7 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public ResPageable getAllCheckedByListener(int page, int size, User user) {
         Pageable pageable = CommonUtils.getPageable(page, size);
-        Page<Document> checkedByListener = documentRepository.findByCheckedByAndStatusAndDeletedFalseAndAnswerIsNull(user, DocumentStatus.COMPLETED, pageable);
+        Page<Document> checkedByListener = documentRepository.findByCheckedByAndStatusAndDeletedFalseAndAnswerIsNullOrderByCreatedAtDesc(user, DocumentStatus.COMPLETED, pageable);
         List<ApplicationResponse> applications = checkedByListener.getContent().stream().map(document -> ApplicationResponse.fromEntity(document.getApplication())).collect(Collectors.toList());
         return new ResPageable(
                 applications,
@@ -163,7 +163,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public ResPageable deniedAnswerDocument(User user,Pageable pageable) {
-        Page<Document> documents = documentRepository.findByCheckedByAndStatusAndDeletedFalseAndAnswerIsNotNull(user, DocumentStatus.DENIED, pageable);
+        Page<Document> documents = documentRepository.findByCheckedByAndStatusAndDeletedFalseAndAnswerIsNotNullOrderByCreatedAtDesc(user, DocumentStatus.DENIED, pageable);
         return new ResPageable(
                 documents.stream().map(DocumentResponse::fromEntity).collect(Collectors.toList()),
                 pageable.getPageNumber(),
@@ -176,7 +176,7 @@ public class DocumentServiceImpl implements DocumentService {
     public ResPageable getCheckedApplication(int page, int size, User user) {
         Pageable pageable = CommonUtils.getPageable(page, size);
         List<Application> applications = applicationRepository.findByCreatedByAndDeletedFalse(user);
-        Page<Document> documents = documentRepository.findByApplicationInAndStatusAndDeletedFalseAndAnswerStatus(applications, DocumentStatus.COMPLETED, AnswerStatus.COMPLETED, pageable);
+        Page<Document> documents = documentRepository.findByApplicationInAndStatusAndDeletedFalseAndAnswerStatusOrderByCreatedAtDesc(applications, DocumentStatus.COMPLETED, AnswerStatus.COMPLETED, pageable);
         return new ResPageable(
                 documents.getContent().stream().map(DocumentResponse::fromEntity).collect(Collectors.toList()),
                 page,
@@ -193,7 +193,7 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public ResPageable getAlllAcceptedDocument(Pageable pageable) {
         List<DocumentStatus> statusList = new ArrayList<>(Arrays.asList(DocumentStatus.CREATED, DocumentStatus.INPROCESS, DocumentStatus.COMPLETED, DocumentStatus.WAITING));
-        Page<Document> byStatusInAndDeletedFalse = documentRepository.findByStatusInAndDeletedFalse(statusList, pageable);
+        Page<Document> byStatusInAndDeletedFalse = documentRepository.findByStatusInAndDeletedFalseOrderByCreatedAtDesc(statusList, pageable);
         return new ResPageable(
                 byStatusInAndDeletedFalse.getContent().stream().map(DocumentResponse::fromEntity).collect(Collectors.toList()),
                 pageable.getPageNumber(),
@@ -205,7 +205,7 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public ResPageable getAlllAcceptedApplication(User user, Pageable pageable) {
         List<DocumentStatus> statusList = new ArrayList<>(Arrays.asList(DocumentStatus.CREATED, DocumentStatus.INPROCESS, DocumentStatus.COMPLETED));
-        Page<Document> byStatusInAndDeletedFalse = documentRepository.findByStatusInAndDeletedFalseAndCheckedBySection(statusList, user.getSection(), pageable);
+        Page<Document> byStatusInAndDeletedFalse = documentRepository.findByStatusInAndDeletedFalseAndCheckedBySectionOrderByCreatedAtDesc(statusList, user.getSection(), pageable);
         return new ResPageable(
                 byStatusInAndDeletedFalse.getContent().stream().map(DocumentResponse::fromEntity).collect(Collectors.toList()),
                 pageable.getPageNumber(),
@@ -219,7 +219,7 @@ public class DocumentServiceImpl implements DocumentService {
         List<AnswerStatus> statusList = new ArrayList<>(Arrays.asList(AnswerStatus.CREATED, AnswerStatus.ACCEPTED));
         List<Answer> findAnswers = answerRepository.findByStatusInAndDeletedFalse(statusList);
         if (!findAnswers.isEmpty()) {
-            Page<Document> byStatusInAndAnswerIsNotNullAndDeletedFalse = documentRepository.findByAnswerInAndDeletedFalseAndCheckedBy(findAnswers, pageable, user);
+            Page<Document> byStatusInAndAnswerIsNotNullAndDeletedFalse = documentRepository.findByAnswerInAndDeletedFalseAndCheckedByOrderByCreatedAtDesc(findAnswers, pageable, user);
             return new ResPageable(
                     byStatusInAndAnswerIsNotNullAndDeletedFalse.getContent().stream().map(DocumentResponse::fromEntity).collect(Collectors.toList()),
                     pageable.getPageNumber(),
@@ -237,7 +237,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public ResPageable getAnswerFeedback(User user, Pageable pageable) {
-        Page<Document> findDocuments = documentRepository.findByCheckedByAndStatusAndDeletedFalse(user, DocumentStatus.COMPLETED, pageable);
+        Page<Document> findDocuments = documentRepository.findByCheckedByAndStatusAndDeletedFalseOrderByCreatedAtDesc(user, DocumentStatus.COMPLETED, pageable);
         return new ResPageable(
                 findDocuments.getContent().stream().map(DocumentResponse::fromEntity).collect(Collectors.toList()),
                 pageable.getPageNumber(),
@@ -267,9 +267,9 @@ public class DocumentServiceImpl implements DocumentService {
         Pageable pageable = CommonUtils.getPageable(page, size);
         Page<Document> findDocuments =null;
         if (sts.equals(UserStatus.SUPER_MODERATOR.name())){
-            findDocuments = documentRepository.findByStatusAndAnswerIsNullAndDeletedFalse(DocumentStatus.FORWARD_TO_SUPER_MODERATOR, pageable);
+            findDocuments = documentRepository.findByStatusAndAnswerIsNullAndDeletedFalseOrderByCreatedAtDesc(DocumentStatus.FORWARD_TO_SUPER_MODERATOR, pageable);
         }else {
-            findDocuments=documentRepository.findByStatusAndSectionAndAnswerIsNull(DocumentStatus.FORWARD_TO_MODERATOR,user.getSection(),pageable);
+            findDocuments=documentRepository.findByStatusAndSectionAndAnswerIsNullOrderByCreatedAtDesc(DocumentStatus.FORWARD_TO_MODERATOR,user.getSection(),pageable);
         }
         return new ResPageable(
                 findDocuments.getContent().stream().map(DocumentResponse::fromEntity).collect(Collectors.toList()),

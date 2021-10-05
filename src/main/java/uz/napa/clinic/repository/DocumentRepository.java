@@ -24,18 +24,18 @@ public interface DocumentRepository extends JpaRepository<Document, UUID> {
 
     List<Document> findByStatusAndAnswerIsNullAndDeletedFalse(DocumentStatus status);
 
-    Page<Document> findByStatusAndAnswerIsNullAndDeletedFalse(DocumentStatus status, Pageable pageable);
+    Page<Document> findByStatusAndAnswerIsNullAndDeletedFalseOrderByCreatedAtDesc(DocumentStatus status, Pageable pageable);
 
 //    @Query(value = "select *from document where section_id=?2 and status=?1",nativeQuery = true)
-    Page<Document> findByStatusAndSectionAndAnswerIsNull(DocumentStatus status,Section section, Pageable pageable);
+    Page<Document> findByStatusAndSectionAndAnswerIsNullOrderByCreatedAtDesc(DocumentStatus status,Section section, Pageable pageable);
 
-    Page<Document> findByAnswerInAndDeletedFalseAndCheckedBy(List<Answer> answer, Pageable pageable, User user);
+    Page<Document> findByAnswerInAndDeletedFalseAndCheckedByOrderByCreatedAtDesc(List<Answer> answer, Pageable pageable, User user);
 
-    Page<Document> findByCheckedByAndStatusAndDeletedFalseAndAnswerIsNull(User user, DocumentStatus status, Pageable pageable);
+    Page<Document> findByCheckedByAndStatusAndDeletedFalseAndAnswerIsNullOrderByCreatedAtDesc(User user, DocumentStatus status, Pageable pageable);
 
-    Page<Document> findByStatusInAndDeletedFalse(List<DocumentStatus> status, Pageable pageable);
+    Page<Document> findByStatusInAndDeletedFalseOrderByCreatedAtDesc(List<DocumentStatus> status, Pageable pageable);
 
-    Page<Document> findByStatusInAndDeletedFalseAndCheckedBySection(Collection<DocumentStatus> status, Section checkedBy_section, Pageable pageable);
+    Page<Document> findByStatusInAndDeletedFalseAndCheckedBySectionOrderByCreatedAtDesc(Collection<DocumentStatus> status, Section checkedBy_section, Pageable pageable);
 
     Document findByApplicationAndAndDeletedFalse(Application application);
 
@@ -45,15 +45,15 @@ public interface DocumentRepository extends JpaRepository<Document, UUID> {
 
     Page<Document> findAllByAnswerIn(Collection<Answer> answer, Pageable pageable);
 
-    Page<Document> findByStatusAndDeletedFalseAndCheckedBySection(DocumentStatus status, Section checkedBy_section, Pageable pageable);
+    Page<Document> findByStatusAndDeletedFalseAndCheckedBySectionOrderByCreatedAtDesc(DocumentStatus status, Section checkedBy_section, Pageable pageable);
 
     List<Document> findAllByAnswerIn(Collection<Answer> answer);
 
-    Page<Document> findByCheckedByAndStatusAndDeletedFalseAndAnswerIsNotNull(User user, DocumentStatus status,Pageable pageable);
+    Page<Document> findByCheckedByAndStatusAndDeletedFalseAndAnswerIsNotNullOrderByCreatedAtDesc(User user, DocumentStatus status,Pageable pageable);
 
-    Page<Document> findByCheckedByAndStatusAndDeletedFalse(User checkedBy, DocumentStatus status, Pageable pageable);
+    Page<Document> findByCheckedByAndStatusAndDeletedFalseOrderByCreatedAtDesc(User checkedBy, DocumentStatus status, Pageable pageable);
 
-    Page<Document> findByApplicationInAndStatusAndDeletedFalseAndAnswerStatus(List<Application> application, DocumentStatus status, AnswerStatus answer_status, Pageable pageable);
+    Page<Document> findByApplicationInAndStatusAndDeletedFalseAndAnswerStatusOrderByCreatedAtDesc(List<Application> application, DocumentStatus status, AnswerStatus answer_status, Pageable pageable);
 
     @Query(nativeQuery = true, value = "select u,COUNT(d.status),d.status from document d\n" +
             "left join users u\n" +

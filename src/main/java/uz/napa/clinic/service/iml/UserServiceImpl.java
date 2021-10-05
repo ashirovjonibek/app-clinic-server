@@ -259,7 +259,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<ListenerResponse> userList(UserStatus status) {
-        List<User> moderList = userRepository.findByStatusAndDeletedFalse(status);
+        List<User> moderList = userRepository.findByStatusAndDeletedFalseAndViewedTrue(status);
+        return moderList.stream().map(ListenerResponse::fromEntity).collect(Collectors.toList());
+    }
+
+    public List<ListenerResponse> userListViewFalse(UserStatus status) {
+        List<User> moderList = userRepository.findByStatusAndDeletedFalseAndViewedFalse(status);
         return moderList.stream().map(ListenerResponse::fromEntity).collect(Collectors.toList());
     }
 
