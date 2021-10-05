@@ -7,6 +7,8 @@ import uz.napa.clinic.entity.enums.UserStatus;
 import uz.napa.clinic.entity.template.BaseEntity;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
@@ -21,10 +23,14 @@ public class User extends BaseEntity {
     @Column(name = "full_name")
     private String fullName;
 
-    @Column(name = "email")
+    @NotNull
+    @NotBlank(message="Please enter your email")
+    @Column(name = "email",unique = true)
     private String email;
 
-    @Column(name = "phone_number")
+    @NotNull
+    @NotBlank(message="Please enter your phone number")
+    @Column(name = "phone_number",unique = true)
     private String phoneNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)

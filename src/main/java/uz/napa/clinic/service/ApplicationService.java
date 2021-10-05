@@ -1,6 +1,7 @@
 package uz.napa.clinic.service;
 
 import uz.napa.clinic.entity.Application;
+import uz.napa.clinic.entity.Section;
 import uz.napa.clinic.entity.User;
 import uz.napa.clinic.payload.*;
 import uz.napa.clinic.projection.*;
@@ -54,4 +55,6 @@ public interface ApplicationService {
     List<ListenerStatusCount> getInfoListener();
 
     List<CustomUserInfo> getInfoApplicant();
+
+    ResPageable getDeadlineApp(Section section,int size,int page);
 }

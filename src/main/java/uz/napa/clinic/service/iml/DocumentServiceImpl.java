@@ -70,6 +70,7 @@ public class DocumentServiceImpl implements DocumentService {
                 Document document = findDocument.get();
                 document.setStatus(DocumentStatus.TRASH);
                 Application application = document.getApplication();
+                document.getApplication().setDeadline(null);
                 Document newDocument = new Document();
                 newDocument.setApplication(application);
                 newDocument.setCheckedBy(findUser.get());

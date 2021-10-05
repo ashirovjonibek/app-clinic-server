@@ -1,5 +1,6 @@
 package uz.napa.clinic.controller;
 
+import javassist.CannotCompileException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +17,7 @@ import uz.napa.clinic.security.CustomUserDetails;
 import uz.napa.clinic.service.UserService;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -64,15 +65,43 @@ public class AuthController {
     //Arizachi qoshish
     @PostMapping(REGISTER_APPLICANT)
     public HttpEntity<?> registerApplicant(@RequestBody ApplicantRequest request) {
-        ApiResponse response = userService.addApplicant(request);
-        return ResponseEntity.status(response.isSuccess() ? HttpStatus.CREATED : HttpStatus.CONFLICT).body(response);
+        if (!userRepository.existsByPhoneNumber(request.getPhoneNumber())&&!userRepository.existsByEmail(request.getEmail())){
+            ApiResponse response = userService.addApplicant(request);
+            return ResponseEntity.status(response.isSuccess() ? HttpStatus.CREATED : HttpStatus.CONFLICT).body(response);
+        }
+        else {
+            Map<String,String> errors=new HashMap<>();
+            if (userRepository.existsByPhoneNumber(request.getPhoneNumber())){
+                errors.put("phoneNumber","Phone number avvaldan mavjud!!!");
+            }
+            if (userRepository.existsByEmail(request.getEmail())){
+                errors.put("email","Email number avvaldan mavjud!!!");
+            }
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(errors);
+        }
     }
 
     //Prokuratura xodimlarini royxatdan otkazish
     @PostMapping(REGISTER_LISTENER)
-    public HttpEntity<?> registerListener(@RequestBody ListenerRequest request) {
-        ApiResponse response = userService.addListener(request);
-        return ResponseEntity.status(response.isSuccess() ? HttpStatus.CREATED : HttpStatus.CONFLICT).body(response);
+    public HttpEntity<?> registerListener(@RequestBody ListenerRequest request) throws CannotCompileException {
+        if (!userRepository.existsByPhoneNumber(request.getPhoneNumber())&&!userRepository.existsByEmail(request.getEmail())){
+            ApiResponse response = userService.addListener(request);
+            return ResponseEntity.status(response.isSuccess() ? HttpStatus.CREATED : HttpStatus.CONFLICT).body(response);
+        }else {
+            Map<String,String> errors=new HashMap<>();
+//            List<String> errors=new ArrayList<>();
+            if (userRepository.existsByPhoneNumber(request.getPhoneNumber())&&userRepository.existsByEmail(request.getEmail())){
+                errors.put("email","Email avvaldan mavjud!!!");
+                errors.put("phoneNumber","Phone number avvaldan mavjud!!!");
+            }
+            if (userRepository.existsByPhoneNumber(request.getPhoneNumber())){
+                errors.put("phoneNumber","Phone number avvaldan mavjud!!!");
+            }
+            if (userRepository.existsByEmail(request.getEmail())){
+                errors.put("phoneNumber","Phone number avvaldan mavjud!!!");
+            }
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(errors);
+        }
     }
 
 

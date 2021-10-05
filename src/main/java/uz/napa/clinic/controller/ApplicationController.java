@@ -4,6 +4,8 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import uz.napa.clinic.entity.Section;
+import uz.napa.clinic.entity.enums.UserStatus;
 import uz.napa.clinic.payload.ApiResponse;
 import uz.napa.clinic.payload.ApplicationRequest;
 import uz.napa.clinic.payload.Commit;
@@ -41,6 +43,7 @@ public class ApplicationController {
     private static final String GET_BY_GIVEN_YEAR = "/filterByYear";
     private static final String INFO_APPLICANT = "/info/applicant";
     private static final String INFO_LISTENER = "/info/listener";
+    private static final String DEADLINE_APPLICATIONS = "/deadline_applications";
 
     final
     ApplicationServiceImpl applicationService;
@@ -178,6 +181,16 @@ public class ApplicationController {
     @GetMapping(INFO_APPLICANT)
     public ResponseEntity<?> getInfoApplicant() {
         return ResponseEntity.ok(applicationService.getInfoApplicant());
+    }
+
+    @GetMapping(DEADLINE_APPLICATIONS)
+    public ResponseEntity<?> getDeadlineApp(@CurrentUser CustomUserDetails user,
+                                            @RequestParam(name = "page", defaultValue = AppConstants.DEFAULT_PAGE) int page,
+                                            @RequestParam(name = "size", defaultValue = AppConstants.DEFAULT_SIZE) int size) {
+        if (user.getUser().getStatus().equals(UserStatus.LISTENER)){
+            return ResponseEntity.ok(applicationService.getDeadlineApp(user.getUser().getSection(),size,page));
+        }else
+            return ResponseEntity.ok("Permission denied");
     }
 //
 //    // statistikani yil  boyicha olish

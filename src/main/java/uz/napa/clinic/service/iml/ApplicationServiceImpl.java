@@ -467,6 +467,27 @@ public class ApplicationServiceImpl implements ApplicationService {
         return userInfos;
     }
 
+    @Override
+    public ResPageable getDeadlineApp(Section section,int size,int page) {
+        Pageable pageable = CommonUtils.getPageable(page, size);
+        Calendar calendar=Calendar.getInstance();
+        Calendar calendar1=Calendar.getInstance();
+        calendar.setTime(new Date());
+        calendar.setTime(new Date());
+        calendar.add(Calendar.DATE,5);
+        Page<Application> allDeadline = applicationRepository.getAllDeadline(pageable, new Timestamp(calendar1.getTime().getTime()), new Timestamp(calendar.getTime().getTime()));
+        List<Document> documents=new ArrayList<>();
+        allDeadline.getContent().forEach(application -> {
+            documents.add(documentRepository.findByApplicationAndAndDeletedFalse(application));
+        });
+        return new ResPageable(
+                documents.stream().map(application -> DocumentResponse.fromEntity(application)).collect(Collectors.toList()),
+                page,
+                allDeadline.getTotalPages(),
+                allDeadline.getTotalElements()
+        );
+    }
+
     private Application fromRequest(Application application, ApplicationRequest request) {
         application.setTitle(request.getTitle());
         application.setDescription(request.getDescription());
@@ -474,7 +495,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (application.getId() != null) {
             application.setDeadline(request.getDeadline());
         } else {
-            application.setDeadline(addDays(new Timestamp(new Date().getTime()), 15));
+            application.setDeadline(addDays(new Timestamp(new Date().getTime()), 30));
         }
         if (!request.getAttachmentId().isEmpty()) {
             application.setAttachments(attachmentRepository.findAllById(request.getAttachmentId()));

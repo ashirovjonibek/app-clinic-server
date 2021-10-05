@@ -6,9 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import uz.napa.clinic.entity.Application;
+import uz.napa.clinic.entity.Document;
 import uz.napa.clinic.entity.User;
 import uz.napa.clinic.projection.*;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,6 +26,9 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
 
     @Query(nativeQuery = true, value = "SELECT * FROM application ORDER BY RANDOM() LIMIT 3")
     List<Application> getTopByRandom();
+
+    @Query(value = "select *from aplication where deadline is not null and deadline between :start and :end",nativeQuery = true)
+    Page<Application> getAllDeadline(Pageable pageable, Timestamp start,Timestamp end);
 
 
 //    @Query(

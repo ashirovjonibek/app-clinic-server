@@ -37,6 +37,8 @@ public interface DocumentRepository extends JpaRepository<Document, UUID> {
 
     Page<Document> findByStatusInAndDeletedFalseAndCheckedBySection(Collection<DocumentStatus> status, Section checkedBy_section, Pageable pageable);
 
+    Document findByApplicationAndAndDeletedFalse(Application application);
+
     Document findByApplicationAndDeletedFalseAndStatus(Application application, DocumentStatus status);
 
     Optional<Document> findByAnswer(Answer answer);
