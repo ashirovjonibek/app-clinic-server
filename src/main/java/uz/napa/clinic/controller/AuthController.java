@@ -99,7 +99,7 @@ public class AuthController {
                 errors.put("phoneNumber","Phone number avvaldan mavjud!!!");
             }
             if (userRepository.existsByEmail(request.getEmail())){
-                errors.put("phoneNumber","Phone number avvaldan mavjud!!!");
+                errors.put("email","Email avvaldan mavjud!!!");
             }
             return ResponseEntity.status(HttpStatus.CONFLICT).body(errors);
         }
