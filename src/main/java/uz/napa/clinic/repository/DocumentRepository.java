@@ -29,6 +29,10 @@ public interface DocumentRepository extends JpaRepository<Document, UUID> {
 //    @Query(value = "select *from document where section_id=?2 and status=?1",nativeQuery = true)
     Page<Document> findByStatusAndSectionAndAnswerIsNullOrderByCreatedAtDesc(DocumentStatus status,Section section, Pageable pageable);
 
+    Page<Document> findByStatusAndSectionAndDeletedFalseOrderByCreatedAtDesc(DocumentStatus status, Section section,Pageable pageable);
+
+    Page<Document> findByStatusAndDeletedFalseOrderByCreatedAtDesc(DocumentStatus status,Pageable pageable);
+
     Page<Document> findByAnswerInAndDeletedFalseAndCheckedByOrderByCreatedAtDesc(List<Answer> answer, Pageable pageable, User user);
 
     Page<Document> findByCheckedByAndStatusAndDeletedFalseAndAnswerIsNullOrderByCreatedAtDesc(User user, DocumentStatus status, Pageable pageable);

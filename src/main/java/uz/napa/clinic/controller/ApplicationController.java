@@ -3,12 +3,15 @@ package uz.napa.clinic.controller;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import uz.napa.clinic.entity.Section;
+import uz.napa.clinic.entity.enums.ApplicationStatus;
 import uz.napa.clinic.entity.enums.UserStatus;
 import uz.napa.clinic.payload.ApiResponse;
 import uz.napa.clinic.payload.ApplicationRequest;
 import uz.napa.clinic.payload.Commit;
+import uz.napa.clinic.payload.DelayedRequest;
 import uz.napa.clinic.repository.AttachmentRepository;
 import uz.napa.clinic.repository.SectionRepository;
 import uz.napa.clinic.repository.UserRepository;
@@ -44,7 +47,8 @@ public class ApplicationController {
     private static final String INFO_APPLICANT = "/info/applicant";
     private static final String INFO_LISTENER = "/info/listener";
     private static final String DEADLINE_APPLICATIONS = "/deadline_applications";
-
+    private static final String GET_BY_STATUS_COUNT="/get-by-status-count";
+    private static final String SET_DEADLINE_DATE="/set-deadline";
     final
     ApplicationServiceImpl applicationService;
     final
@@ -72,6 +76,13 @@ public class ApplicationController {
     @PutMapping(UPDATE)
     public HttpEntity<?> updateApplication(@PathVariable UUID id, @RequestBody ApplicationRequest request) {
         ApiResponse response = applicationService.update(id, request);
+        return ResponseEntity.status(response.isSuccess() ? HttpStatus.ACCEPTED : HttpStatus.CONFLICT).body(response);
+    }
+
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    @PutMapping(SET_DEADLINE_DATE)
+    public HttpEntity<?> setDeadlineDate(@RequestBody DelayedRequest request) {
+        ApiResponse response = applicationService.setDeadLine(request);
         return ResponseEntity.status(response.isSuccess() ? HttpStatus.ACCEPTED : HttpStatus.CONFLICT).body(response);
     }
 
@@ -108,6 +119,11 @@ public class ApplicationController {
     @GetMapping(GET_BY_ID)
     public HttpEntity<?> getApplication(@PathVariable UUID id) {
         return ResponseEntity.ok(applicationService.getOne(id));
+    }
+
+    @GetMapping(GET_BY_STATUS_COUNT)
+    public HttpEntity<?> getApplicationStatistic(@CurrentUser CustomUserDetails user) {
+        return ResponseEntity.ok(applicationService.getStatistic(user.getUser()));
     }
 
     //Arizachiga tegishli bolgan arizalar tekshirilgan va tekshirilmagan

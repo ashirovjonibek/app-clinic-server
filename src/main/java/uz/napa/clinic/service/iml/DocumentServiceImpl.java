@@ -1,6 +1,7 @@
 package uz.napa.clinic.service.iml;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import uz.napa.clinic.entity.*;
@@ -188,6 +189,25 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public List<Document> findAll() {
         return documentRepository.findAll();
+    }
+
+    public ResPageable findAllByPageable(int page, int size,DocumentStatus status,User user) {
+        Pageable pageable = CommonUtils.getPageable(page, size);
+        Page<Document> documentPage=null;
+
+        if (status.equals(DocumentStatus.ALL)){
+            documentPage=documentRepository.findAll(pageable);
+        }else {
+            if (status.equals(DocumentStatus.FORWARD_TO_MODERATOR))documentPage=documentRepository.findByStatusAndSectionAndDeletedFalseOrderByCreatedAtDesc(status,user.getSection(),pageable);
+            else documentPage=documentRepository.findByStatusAndDeletedFalseOrderByCreatedAtDesc(status,pageable);
+        }
+
+        return new ResPageable(
+                documentPage.getContent().stream().map(DocumentResponse::fromEntity).collect(Collectors.toList()),
+                page,
+                documentPage.getTotalPages(),
+                documentPage.getTotalElements()
+        );
     }
 
     @Override

@@ -8,5 +8,6 @@ public enum DocumentStatus {
     TRASH,
     COMPLETED,
     FORWARD_TO_MODERATOR,
-    FORWARD_TO_SUPER_MODERATOR
+    FORWARD_TO_SUPER_MODERATOR,
+    ALL
 }

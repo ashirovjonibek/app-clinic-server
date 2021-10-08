@@ -1,8 +1,7 @@
 package uz.napa.clinic.service;
 
-import uz.napa.clinic.entity.Application;
-import uz.napa.clinic.entity.Section;
-import uz.napa.clinic.entity.User;
+import uz.napa.clinic.entity.*;
+import uz.napa.clinic.entity.enums.DocumentStatus;
 import uz.napa.clinic.payload.*;
 import uz.napa.clinic.projection.*;
 import uz.napa.clinic.repository.CustomInfoStatus;
@@ -44,6 +43,8 @@ public interface ApplicationService {
 
     List<CustomGender> getByGender();
 
+    ApplicationStatistic getStatistic(User user);
+
     List<CustomInfoStatus> getByStatus();
 
     List<SectionStatusCount> getBySection();
@@ -57,4 +58,6 @@ public interface ApplicationService {
     List<CustomUserInfo> getInfoApplicant();
 
     ResPageable getDeadlineApp(Section section,int size,int page);
+
+    ApiResponse setDeadLine(DelayedRequest request);
 }

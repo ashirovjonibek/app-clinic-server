@@ -1,12 +1,10 @@
 package uz.napa.clinic.service.iml;
 
+import net.bytebuddy.implementation.bytecode.Throw;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import uz.napa.clinic.entity.Application;
-import uz.napa.clinic.entity.Document;
-import uz.napa.clinic.entity.Section;
-import uz.napa.clinic.entity.User;
+import uz.napa.clinic.entity.*;
 import uz.napa.clinic.entity.enums.ApplicationStatus;
 import uz.napa.clinic.entity.enums.DocumentStatus;
 import uz.napa.clinic.entity.enums.UserStatus;
@@ -33,8 +31,9 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final EntityManager entityManager;
     private final RegionRepository regionRepository;
     private final SectionRepository sectionRepository;
+    private final DelayedApplicationsRepository delayedApplicationsRepository;
 
-    public ApplicationServiceImpl(ApplicationRepository applicationRepository, SectionServiceImpl sectionService, AttachmentRepository attachmentRepository, UserRepository userRepository, DocumentRepository documentRepository, EntityManager entityManager, RegionRepository regionRepository, SectionRepository sectionRepository) {
+    public ApplicationServiceImpl(ApplicationRepository applicationRepository, SectionServiceImpl sectionService, AttachmentRepository attachmentRepository, UserRepository userRepository, DocumentRepository documentRepository, EntityManager entityManager, RegionRepository regionRepository, SectionRepository sectionRepository, DelayedApplicationsRepository delayedApplicationsRepository) {
         this.applicationRepository = applicationRepository;
         this.sectionService = sectionService;
         this.attachmentRepository = attachmentRepository;
@@ -43,6 +42,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         this.entityManager = entityManager;
         this.regionRepository = regionRepository;
         this.sectionRepository = sectionRepository;
+        this.delayedApplicationsRepository = delayedApplicationsRepository;
     }
 
     //Ariza yaratish
@@ -64,7 +64,12 @@ public class ApplicationServiceImpl implements ApplicationService {
                 if (leastUser != null) {
                     document.setCheckedBy(leastUser);
                 } else {
-                    document.setStatus(DocumentStatus.FORWARD_TO_MODERATOR);
+                    User mod = userRepository.findByStatusAndSection(UserStatus.MODERATOR,sectionRepository.findById(request.getSectionId()).get());
+                    if (mod != null) {
+                        document.setStatus(DocumentStatus.FORWARD_TO_MODERATOR);
+                    } else {
+                        document.setStatus(DocumentStatus.FORWARD_TO_SUPER_MODERATOR);
+                    }
                 }
             }
             documentRepository.save(document);
@@ -170,8 +175,9 @@ public class ApplicationServiceImpl implements ApplicationService {
             Document findDocument = documentRepository.findByApplicationAndDeletedFalseAndStatus(findApplication.get(), DocumentStatus.CREATED);
             Application application = findApplication.get();
             application.setStatus(ApplicationStatus.INPROCESS);
+            application.setDeadline(addDays(new Timestamp(new Date().getTime()), 30));
             findDocument.setStatus(DocumentStatus.INPROCESS);
-            applicationRepository.save(application);
+            findDocument.setApplication(applicationRepository.save(application));
             documentRepository.save(findDocument);
             return new ApiResponse("Application accepted ", true);
         } else {
@@ -334,6 +340,85 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     @Override
+    public ApplicationStatistic getStatistic(User user) {
+        Map<String,Object> response=new HashMap<>();
+        List<Application> all = applicationRepository.findAll();
+        List<Section> all1 = sectionRepository.findAll();
+        Map<String,Object> sections=new HashMap<>();
+        List<DelayedApplications> all2 = delayedApplicationsRepository.findAll();
+        response.put("allApplications",all.size());
+        int a=0,b=0,n=0,completed=0,thisDayNew=0,thisDayComplete=0;
+        Date time=new Date();
+        for (int i = 0; i < all.size(); i++) {
+            if (!all.get(i).getStatus().equals(ApplicationStatus.COMPLETED)&&!all.get(i).getStatus().equals(ApplicationStatus.CREATED)) a++;
+            if ((!all.get(i).getStatus().equals(ApplicationStatus.COMPLETED)&&!all.get(i).getStatus().equals(ApplicationStatus.CREATED))&&
+                all.get(i).getDeadline().getTime()<time.getTime()
+            ) b++;
+            if (all.get(i).getStatus().equals(ApplicationStatus.CREATED))n++;
+            if (all.get(i).getStatus().equals(ApplicationStatus.COMPLETED))completed++;
+            if (all.get(i).getStatus().equals(ApplicationStatus.CREATED)&&
+                    (
+                            all.get(i).getCreatedAt().getDay()==time.getDay()&&
+                            all.get(i).getCreatedAt().getMonth()==time.getMonth()
+                    )
+            )thisDayNew++;
+            if (all.get(i).getStatus().equals(ApplicationStatus.COMPLETED)&&
+                    (
+                            all.get(i).getUpdatedAt().getDay()==time.getDay()&&
+                                    all.get(i).getUpdatedAt().getMonth()==time.getMonth()
+                    ))thisDayComplete++;
+        }
+        for (int i = 0; i < all1.size(); i++) {
+            int counter=0;
+            int aIn=0,bIn=0,nIn=0,completedIn=0,thisDayNewIn=0,thisDayCompleteIn=0,delayedIn=0;
+            for (int j = 0; j < all.size(); j++) {
+                if (all1.get(i).getId().equals(all.get(j).getSection().getId()))counter++;
+                if (all1.get(i).getId().equals(all.get(j).getSection().getId())&&!all.get(i).getStatus().equals(ApplicationStatus.COMPLETED)&&!all.get(i).getStatus().equals(ApplicationStatus.CREATED)) aIn++;
+                if (all1.get(i).getId().equals(all.get(j).getSection().getId())&&(!all.get(i).getStatus().equals(ApplicationStatus.COMPLETED)&&!all.get(i).getStatus().equals(ApplicationStatus.CREATED))&&
+                        all.get(i).getDeadline().getTime()<time.getTime()
+                ) bIn++;
+                if (all1.get(i).getId().equals(all.get(j).getSection().getId())&&all.get(i).getStatus().equals(ApplicationStatus.CREATED))nIn++;
+                if (all1.get(i).getId().equals(all.get(j).getSection().getId())&&all.get(i).getStatus().equals(ApplicationStatus.COMPLETED))completedIn++;
+                if (all1.get(i).getId().equals(all.get(j).getSection().getId())&&all.get(i).getStatus().equals(ApplicationStatus.CREATED)&&
+                        (
+                                all.get(i).getCreatedAt().getDay()==time.getDay()&&
+                                        all.get(i).getCreatedAt().getMonth()==time.getMonth()
+                        )
+                )thisDayNewIn++;
+                if (all1.get(i).getId().equals(all.get(j).getSection().getId())&&all.get(i).getStatus().equals(ApplicationStatus.COMPLETED)&&
+                        (
+                                all.get(i).getUpdatedAt().getDay()==time.getDay()&&
+                                        all.get(i).getUpdatedAt().getMonth()==time.getMonth()
+                        ))thisDayCompleteIn++;
+            }
+            for (int j = 0; j < all2.size(); j++) {
+                if (all1.get(i).getId()==all2.get(j).getSection().getId())delayedIn++;
+            }
+            Map<String,Object> section=new HashMap<>();
+            section.put("this",all1.get(i));
+            section.put("inProcessApplications",aIn);
+            section.put("deadlineEndEndingApplications",bIn);
+            section.put("newApplications",nIn);
+            section.put("completeApplications",completedIn);
+            section.put("thisDayNewApplications",thisDayNewIn);
+            section.put("thisDayCompleteApplications",thisDayCompleteIn);
+            section.put("count",counter);
+            section.put("delayDeadlineApplications",delayedIn);
+            sections.put(""+all1.get(i).getId(),section);
+        }
+        response.put("inProcessApplications",a);
+        response.put("deadlineEndEndingApplications",b);
+        response.put("newApplications",n);
+        response.put("completeApplications",completed);
+        response.put("thisDayNewApplications",thisDayNew);
+        response.put("thisDayCompleteApplications",thisDayComplete);
+        response.put("delayDeadlineApplications",all2.size());
+        response.put("sections",sections);
+
+        return new ApplicationStatistic(response);
+    }
+
+    @Override
     public List<CustomInfoRegion> getByDenied() {
         return applicationRepository.getByDenied();
     }
@@ -468,15 +553,15 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     @Override
-    public ResPageable getDeadlineApp(Section section,int size,int page) {
+    public ResPageable getDeadlineApp(Section section, int size, int page) {
         Pageable pageable = CommonUtils.getPageable(page, size);
-        Calendar calendar=Calendar.getInstance();
-        Calendar calendar1=Calendar.getInstance();
+        Calendar calendar = Calendar.getInstance();
+        Calendar calendar1 = Calendar.getInstance();
         calendar.setTime(new Date());
         calendar.setTime(new Date());
-        calendar.add(Calendar.DATE,5);
+        calendar.add(Calendar.DATE, 5);
         Page<Application> allDeadline = applicationRepository.getAllDeadline(pageable, new Timestamp(calendar1.getTime().getTime()), new Timestamp(calendar.getTime().getTime()));
-        List<Document> documents=new ArrayList<>();
+        List<Document> documents = new ArrayList<>();
         allDeadline.getContent().forEach(application -> {
             documents.add(documentRepository.findByApplicationAndAndDeletedFalse(application));
         });
@@ -488,16 +573,35 @@ public class ApplicationServiceImpl implements ApplicationService {
         );
     }
 
+    @Override
+    public ApiResponse setDeadLine(DelayedRequest request) {
+        Document document;
+        if (request.getDocumentId()!=null){
+             document = documentRepository.findById(request.getDocumentId()).orElseThrow(() -> new IllegalStateException("Document not found for set application deadline day!!!"));
+        }else {
+            return new ApiResponse("Document id is required!!!",false);
+        }
+        DelayedApplications delayedApplications=new DelayedApplications();
+        document.getApplication().setDeadline(new Timestamp(new Date().getTime()+request.getDelayDay()*86400*1000));
+        delayedApplications.setComment(request.getComment());
+        delayedApplications.setDelayDay(request.getDelayDay());
+        delayedApplications.setDocument(document);
+        delayedApplications.setSection(document.getSection());
+        try {
+            delayedApplicationsRepository.save(delayedApplications);
+            documentRepository.save(document);
+            return new ApiResponse("Successfully updated!!!",true);
+        }catch (Exception e){
+            e.printStackTrace();
+            return new ApiResponse("Error for updated!!!",false);
+        }
+    }
+
     private Application fromRequest(Application application, ApplicationRequest request) {
         application.setTitle(request.getTitle());
         application.setDescription(request.getDescription());
         application.setStatus(ApplicationStatus.CREATED);
-        if (application.getId() != null) {
-            application.setDeadline(request.getDeadline());
-        } else {
-            application.setDeadline(addDays(new Timestamp(new Date().getTime()), 30));
-        }
-        if (!request.getAttachmentId().isEmpty()) {
+        if (request.getAttachmentId()!=null) {
             application.setAttachments(attachmentRepository.findAllById(request.getAttachmentId()));
         }
         if (request.getVideoId() != null) {

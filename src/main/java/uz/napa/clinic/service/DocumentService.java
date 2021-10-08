@@ -16,6 +16,8 @@ public interface DocumentService {
 
     ApplicationResponse getOne(UUID id);
 
+    ResPageable findAllByPageable(int page, int size,DocumentStatus status,User user);
+
     ApiResponse update(UUID id, ApplicationRequest request);
 
     ApiResponse delete(UUID id);

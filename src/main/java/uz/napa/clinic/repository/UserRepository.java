@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import uz.napa.clinic.entity.Section;
+import uz.napa.clinic.entity.enums.DocumentStatus;
 import uz.napa.clinic.entity.enums.UserStatus;
 import uz.napa.clinic.entity.User;
 import uz.napa.clinic.payload.ListenerResponse;
@@ -44,6 +45,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     List<User> findByStatusAndSectionAndDeletedFalse(UserStatus status, Section section);
 
     List<User> findByStatusAndDeletedFalse(UserStatus status);
+
+    User findByStatusAndSection(UserStatus status, Section section);
 
     List<User> findByStatusAndDeletedFalseAndViewedTrue(UserStatus status);
 

@@ -5,6 +5,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import uz.napa.clinic.entity.enums.DocumentStatus;
 import uz.napa.clinic.payload.AnswerRequest;
 import uz.napa.clinic.payload.ApiResponse;
 import uz.napa.clinic.payload.Commit;
@@ -34,6 +35,7 @@ public class DocumentController {
     private static final String GET_APPLICATIONS_LISTENER_IS_NULL = "/applications";
     private static final String GET_DOCUMENT_APPLICATION_TO_SEND = "/sending";
     private static final String GET_FEEDBACK = "/answer/feedback";
+    private static final String GET_BY_STATUS = "/get-by-status";
 
     private final DocumentService documentService;
 
@@ -47,6 +49,17 @@ public class DocumentController {
                                            @RequestParam(name = "page", defaultValue = AppConstants.DEFAULT_PAGE) int page,
                                            @RequestParam(name = "size", defaultValue = AppConstants.DEFAULT_SIZE) int size) {
         return ResponseEntity.ok(new ApiResponse("You applications", true, documentService.getCheckedApplication(page, size, userDetails.getUser())));
+    }
+
+
+    @PreAuthorize("hasAnyAuthority('SUPER_MODERATOR','MODERATOR','SUPER_MODERATOR_AND_MODERATOR','ADMIN')")
+    @GetMapping(GET_BY_STATUS)
+    public HttpEntity<?> getByStatus(@CurrentUser CustomUserDetails userDetails,
+                                     @RequestParam(name = "page", defaultValue = AppConstants.DEFAULT_PAGE) int page,
+                                     @RequestParam(name = "size", defaultValue = AppConstants.DEFAULT_SIZE) int size,
+                                     @RequestParam DocumentStatus status
+                                     ) {
+        return ResponseEntity.ok(new ApiResponse("You applications", true, documentService.findAllByPageable(page, size,status, userDetails.getUser())));
     }
 
     // Hech kim tekshirmayotgan arizalar
