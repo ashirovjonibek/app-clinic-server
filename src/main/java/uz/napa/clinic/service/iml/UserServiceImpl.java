@@ -443,7 +443,7 @@ public class UserServiceImpl implements UserService {
             MimeMessage message1 = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message1);
 
-            helper.setSubject("This is an HTML email");
+            helper.setSubject("`Uz pro clinic` parolni tiklash uchun so'rov");
             helper.setFrom(from);
             helper.setTo(sendingEmail);
 

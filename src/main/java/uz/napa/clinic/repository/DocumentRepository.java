@@ -67,4 +67,6 @@ public interface DocumentRepository extends JpaRepository<Document, UUID> {
             "where d.checked_by is not null and d.status='CREATED' or d.status='COMPLETED'\n" +
             "group by (d.status,u,d.status) ")
     List<CustomInfoCount> getDocumentByCheckedBy();
+
+    Page<Document> findByCheckedByAndStatusAndApplicationTitleContainingIgnoreCaseAndDeletedFalseAndAnswerIsNullOrderByCreatedAtDesc(User user, DocumentStatus status,String search,Pageable pageable);
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import uz.napa.clinic.entity.Application;
 import uz.napa.clinic.entity.Document;
 import uz.napa.clinic.entity.User;
+import uz.napa.clinic.entity.enums.ApplicationStatus;
 import uz.napa.clinic.projection.*;
 
 import java.sql.Timestamp;
@@ -19,6 +20,20 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
 
 
     Page<Application> findAllByCreatedByAndDeletedFalseOrderByCreatedAtDesc(User user, Pageable pageable);
+
+    Page<Application> findAllByCreatedByAndTitleContainingIgnoreCaseAndDeletedFalseOrderByCreatedAtDesc(User user,String search, Pageable pageable);
+
+    Page<Application> findAllByCreatedByAndSectionIdAndTitleContainingIgnoreCaseAndDeletedFalseOrderByCreatedAtDesc(User user,Long sectionId,String search, Pageable pageable);
+
+    Page<Application> findAllByCreatedByAndStatusAndTitleContainingIgnoreCaseAndDeletedFalseOrderByCreatedAtDesc(User user,ApplicationStatus status, String search, Pageable pageable);
+
+    Page<Application> findAllByCreatedByAndStatusAndSectionIdAndTitleContainingIgnoreCaseAndDeletedFalseOrderByCreatedAtDesc(User user,ApplicationStatus status, Long sectionId, String search, Pageable pageable);
+
+    Page<Application> findAllByCreatedByAndStatusAndDeletedFalseOrderByCreatedAtDesc(User user, ApplicationStatus status, Pageable pageable);
+
+    Page<Application> findAllByCreatedByAndStatusAndSectionIdAndDeletedFalseOrderByCreatedAtDesc(User user, ApplicationStatus status, Long id, Pageable pageable);
+
+    Page<Application> findAllByCreatedByAndSectionIdAndDeletedFalseOrderByCreatedAtDesc(User user,Long id, Pageable pageable);
 
     List<Application> findByCreatedByAndDeletedFalse(User user);
 
@@ -155,6 +170,8 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
             "group by(u.phone_number,a.created_by)\n" +
             "order by(COUNT(a.created_by)) desc")
     List<CustomInfoApplicant> getInfoApplicant();
+
+
 
 
 }

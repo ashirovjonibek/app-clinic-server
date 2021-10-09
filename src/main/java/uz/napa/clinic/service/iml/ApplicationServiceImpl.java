@@ -142,9 +142,134 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     @Override
+    public ResPageable getMyApplications(int page, int size, User user, Long sectionId) {
+        if (user != null) {
+            Pageable pageable = CommonUtils.getPageable(page, size);
+            Page<Application> applicationPage = applicationRepository.findAllByCreatedByAndSectionIdAndDeletedFalseOrderByCreatedAtDesc(user,sectionId, pageable);
+            return new ResPageable(
+                    applicationPage.getContent().stream().map(ApplicationResponse::fromEntity).collect(Collectors.toList()),
+                    page,
+                    applicationPage.getTotalPages(),
+                    applicationPage.getTotalElements()
+            );
+        } else {
+            throw new BadRequestException("User Not found ");
+        }
+    }
+
+    @Override
+    public ResPageable getMyApplications(int page, int size, User user, ApplicationStatus status) {
+        if (user != null) {
+            Pageable pageable = CommonUtils.getPageable(page, size);
+            Page<Application> applicationPage = applicationRepository.findAllByCreatedByAndStatusAndDeletedFalseOrderByCreatedAtDesc(user,status, pageable);
+            return new ResPageable(
+                    applicationPage.getContent().stream().map(ApplicationResponse::fromEntity).collect(Collectors.toList()),
+                    page,
+                    applicationPage.getTotalPages(),
+                    applicationPage.getTotalElements()
+            );
+        } else {
+            throw new BadRequestException("User Not found ");
+        }
+    }
+
+    @Override
+    public ResPageable getMyApplications(int page, int size, User user, String search) {
+        if (user != null) {
+            Pageable pageable = CommonUtils.getPageable(page, size);
+            Page<Application> applicationPage = applicationRepository.findAllByCreatedByAndTitleContainingIgnoreCaseAndDeletedFalseOrderByCreatedAtDesc(user,search, pageable);
+            return new ResPageable(
+                    applicationPage.getContent().stream().map(ApplicationResponse::fromEntity).collect(Collectors.toList()),
+                    page,
+                    applicationPage.getTotalPages(),
+                    applicationPage.getTotalElements()
+            );
+        } else {
+            throw new BadRequestException("User Not found ");
+        }
+    }
+
+    @Override
+    public ResPageable getMyApplications(int page, int size, User user, Long sectionId, ApplicationStatus status) {
+        if (user != null) {
+            Pageable pageable = CommonUtils.getPageable(page, size);
+            Page<Application> applicationPage = applicationRepository.findAllByCreatedByAndStatusAndSectionIdAndDeletedFalseOrderByCreatedAtDesc(user,status,sectionId, pageable);
+            return new ResPageable(
+                    applicationPage.getContent().stream().map(ApplicationResponse::fromEntity).collect(Collectors.toList()),
+                    page,
+                    applicationPage.getTotalPages(),
+                    applicationPage.getTotalElements()
+            );
+        } else {
+            throw new BadRequestException("User Not found ");
+        }
+    }
+
+    @Override
+    public ResPageable getMyApplications(int page, int size, User user, ApplicationStatus status, String search) {
+        if (user != null) {
+            Pageable pageable = CommonUtils.getPageable(page, size);
+            Page<Application> applicationPage = applicationRepository.findAllByCreatedByAndStatusAndTitleContainingIgnoreCaseAndDeletedFalseOrderByCreatedAtDesc(user,status,search, pageable);
+            return new ResPageable(
+                    applicationPage.getContent().stream().map(ApplicationResponse::fromEntity).collect(Collectors.toList()),
+                    page,
+                    applicationPage.getTotalPages(),
+                    applicationPage.getTotalElements()
+            );
+        } else {
+            throw new BadRequestException("User Not found ");
+        }
+    }
+
+    @Override
+    public ResPageable getMyApplications(int page, int size, User user, String search, Long sectionId) {
+        if (user != null) {
+            Pageable pageable = CommonUtils.getPageable(page, size);
+            Page<Application> applicationPage = applicationRepository.findAllByCreatedByAndSectionIdAndTitleContainingIgnoreCaseAndDeletedFalseOrderByCreatedAtDesc(user,sectionId,search, pageable);
+            return new ResPageable(
+                    applicationPage.getContent().stream().map(ApplicationResponse::fromEntity).collect(Collectors.toList()),
+                    page,
+                    applicationPage.getTotalPages(),
+                    applicationPage.getTotalElements()
+            );
+        } else {
+            throw new BadRequestException("User Not found ");
+        }
+    }
+
+    @Override
+    public ResPageable getMyApplications(int page, int size, User user, String search, Long sectionId, ApplicationStatus status) {
+        if (user != null) {
+            Pageable pageable = CommonUtils.getPageable(page, size);
+            Page<Application> applicationPage = applicationRepository.findAllByCreatedByAndStatusAndSectionIdAndTitleContainingIgnoreCaseAndDeletedFalseOrderByCreatedAtDesc(user,status,sectionId,search, pageable);
+            return new ResPageable(
+                    applicationPage.getContent().stream().map(ApplicationResponse::fromEntity).collect(Collectors.toList()),
+                    page,
+                    applicationPage.getTotalPages(),
+                    applicationPage.getTotalElements()
+            );
+        } else {
+            throw new BadRequestException("User Not found ");
+        }
+    }
+
+    @Override
     public ResPageable getAllUnCheckedByListener(int page, int size, User user) {
         Pageable pageable = CommonUtils.getPageable(page, size);
         Page<Document> uncheckedApplicationByListener = documentRepository.findByCheckedByAndStatusAndDeletedFalseAndAnswerIsNullOrderByCreatedAtDesc(user, DocumentStatus.CREATED, pageable);
+        List<ApplicationResponse> applications = uncheckedApplicationByListener.stream().map(document -> ApplicationResponse.fromEntity(document.getApplication())).collect(Collectors.toList());
+        return new ResPageable(
+                applications,
+                page,
+                uncheckedApplicationByListener.getTotalPages(),
+                uncheckedApplicationByListener.getTotalElements()
+        );
+    }
+
+    @Override
+    public ResPageable getAllUnCheckedByListener(int page, int size, User user,String search) {
+        Pageable pageable = CommonUtils.getPageable(page, size);
+        Page<Document> uncheckedApplicationByListener = documentRepository.findByCheckedByAndStatusAndApplicationTitleContainingIgnoreCaseAndDeletedFalseAndAnswerIsNullOrderByCreatedAtDesc(user, DocumentStatus.CREATED,search, pageable);
         List<ApplicationResponse> applications = uncheckedApplicationByListener.stream().map(document -> ApplicationResponse.fromEntity(document.getApplication())).collect(Collectors.toList());
         return new ResPageable(
                 applications,
@@ -558,7 +683,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         Calendar calendar = Calendar.getInstance();
         Calendar calendar1 = Calendar.getInstance();
         calendar.setTime(new Date());
-        calendar.setTime(new Date());
+        calendar1.setTime(new Date());
         calendar.add(Calendar.DATE, 5);
         Page<Application> allDeadline = applicationRepository.getAllDeadline(pageable, new Timestamp(calendar1.getTime().getTime()), new Timestamp(calendar.getTime().getTime()));
         List<Document> documents = new ArrayList<>();
@@ -597,6 +722,53 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
     }
 
+    @Override
+    public ResPageable getDelayedApp(User user,int page, int size, DocumentStatus status, String search, String filterDate) {
+        Pageable pageable = CommonUtils.getPageable(page, size);
+
+        if (user.getStatus().equals(UserStatus.SUPER_MODERATOR)
+            ||user.getStatus().equals(UserStatus.SUPER_MODERATOR_AND_MODERATOR)
+                ||user.getStatus().equals(UserStatus.ADMIN)
+        ){
+            Page<DelayedApplications> all;
+            if (!status.equals(DocumentStatus.ALL)){
+                if (search.equals(""))
+                all=delayedApplicationsRepository.findAllByDocumentStatus(status,pageable);
+                else
+                    all=delayedApplicationsRepository.findAllByDocumentApplicationTitleContainingIgnoreCaseAndDocumentStatus(search,status,pageable);
+            }else if (!search.equals("")){
+                all=delayedApplicationsRepository.findAllByDocumentApplicationTitleContainingIgnoreCase(search,pageable);
+            }
+            else {
+                all= delayedApplicationsRepository.findAll(pageable);
+            }
+            return new ResPageable(
+                    all,
+                    page,
+                    all.getTotalPages(),
+                    all.getTotalElements()
+            );
+        }else {
+            Page<DelayedApplications> all;
+//            if (!status.equals("")){
+//                all=delayedApplicationsRepository.findAllByDocumentStatusAndSection(status,user.getSection(),pageable);
+//            }else {
+//            }
+            all= delayedApplicationsRepository.findBySection(user.getSection(),pageable);
+            return new ResPageable(
+                    all,
+                    page,
+                    all.getTotalPages(),
+                    all.getTotalElements()
+            );
+        }
+
+    }
+
+    public DelayedApplications getOneDelayedApp(UUID id){
+        return delayedApplicationsRepository.findById(id).orElseThrow(()->new IllegalStateException("Delayed app not found for this id!!!"));
+    }
+
     private Application fromRequest(Application application, ApplicationRequest request) {
         application.setTitle(request.getTitle());
         application.setDescription(request.getDescription());
@@ -625,5 +797,18 @@ public class ApplicationServiceImpl implements ApplicationService {
         cal.add(Calendar.DATE, days); //minus number would decrement the days
         return new Timestamp(cal.getTime().getTime());
 
+    }
+
+    public ResPageable searchApplicationForListener(User user,String search,int page,int size){
+        Pageable pageable = CommonUtils.getPageable(page, size);
+        Page<Document> uncheckedDocuments = documentRepository.findByCheckedByAndStatusAndApplicationTitleContainingIgnoreCaseAndDeletedFalseAndAnswerIsNullOrderByCreatedAtDesc(user, DocumentStatus.INPROCESS,search, pageable);
+        List<ApplicationResponse> applications = uncheckedDocuments.getContent().stream().map(document -> ApplicationResponse.fromEntity(document.getApplication())).collect(Collectors.toList());
+
+        return new ResPageable(
+                applications,
+                page,
+                uncheckedDocuments.getTotalPages(),
+                uncheckedDocuments.getTotalElements()
+        );
     }
 }

@@ -7,11 +7,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import uz.napa.clinic.entity.Section;
 import uz.napa.clinic.entity.enums.ApplicationStatus;
+import uz.napa.clinic.entity.enums.DocumentStatus;
 import uz.napa.clinic.entity.enums.UserStatus;
-import uz.napa.clinic.payload.ApiResponse;
-import uz.napa.clinic.payload.ApplicationRequest;
-import uz.napa.clinic.payload.Commit;
-import uz.napa.clinic.payload.DelayedRequest;
+import uz.napa.clinic.payload.*;
 import uz.napa.clinic.repository.AttachmentRepository;
 import uz.napa.clinic.repository.SectionRepository;
 import uz.napa.clinic.repository.UserRepository;
@@ -21,6 +19,8 @@ import uz.napa.clinic.service.iml.ApplicationServiceImpl;
 import uz.napa.clinic.utils.AppConstants;
 import uz.napa.clinic.utils.CommonUtils;
 
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.UUID;
 
 @RestController
@@ -47,8 +47,10 @@ public class ApplicationController {
     private static final String INFO_APPLICANT = "/info/applicant";
     private static final String INFO_LISTENER = "/info/listener";
     private static final String DEADLINE_APPLICATIONS = "/deadline_applications";
-    private static final String GET_BY_STATUS_COUNT="/get-by-status-count";
-    private static final String SET_DEADLINE_DATE="/set-deadline";
+    private static final String GET_BY_STATUS_COUNT = "/get-by-status-count";
+    private static final String SET_DEADLINE_DATE = "/set-deadline";
+    private static final String GET_DELAYED_APP = "/get-delayed-app";
+    private static final String GET_ONE_DELAYED_APP = "/get-delayed-app/{id}";
     final
     ApplicationServiceImpl applicationService;
     final
@@ -90,8 +92,14 @@ public class ApplicationController {
     @GetMapping(GET_UNCHEKCED_APPLICATION)
     public HttpEntity<?> getAllUnCheckedByListener(@CurrentUser CustomUserDetails user,
                                                    @RequestParam(name = "page", defaultValue = AppConstants.DEFAULT_PAGE) int page,
-                                                   @RequestParam(name = "size", defaultValue = AppConstants.DEFAULT_SIZE) int size) {
-        return ResponseEntity.ok(applicationService.getAllUnCheckedByListener(page, size, user.getUser()));
+                                                   @RequestParam(name = "size", defaultValue = AppConstants.DEFAULT_SIZE) int size,
+                                                   @RequestParam(name = "search", defaultValue = "") String search
+    ) {
+        if (search.equals("")) {
+            return ResponseEntity.ok(applicationService.getAllUnCheckedByListener(page, size, user.getUser()));
+        } else {
+            return ResponseEntity.ok(applicationService.getAllUnCheckedByListener(page, size, user.getUser(), search));
+        }
     }
 
     // Listenerga kelib tushgan va u javob berish uchun qabul qilganda
@@ -104,14 +112,22 @@ public class ApplicationController {
     @GetMapping(ACCEPTED_APPLICATIONS_BY_LISTENER)
     public ResponseEntity<?> getAcceptedUncheckedApplication(@CurrentUser CustomUserDetails userDetails,
                                                              @RequestParam(name = "page", defaultValue = AppConstants.DEFAULT_PAGE) int page,
-                                                             @RequestParam(name = "size", defaultValue = AppConstants.DEFAULT_SIZE) int size) {
-        return ResponseEntity.ok(applicationService.listByListener(userDetails.getUser(), page, size));
+                                                             @RequestParam(name = "size", defaultValue = AppConstants.DEFAULT_SIZE) int size,
+                                                             @RequestParam(name = "search", defaultValue = "") String search
+
+    ) {
+        if (search.equals("")) {
+            return ResponseEntity.ok(applicationService.listByListener(userDetails.getUser(), page, size));
+        } else {
+            return ResponseEntity.ok(applicationService.searchApplicationForListener(userDetails.getUser(), search, page, size));
+        }
+
     }
 
     //Listenerga kelib tushgan lekin va rad etilganda(Bu bolimga tegishli bo'lmagani uchun)
     @PutMapping(IGNORED_BY_LISTENER)
     public ResponseEntity<?> ignoredByListener(@RequestParam UUID id, @RequestBody Commit message, @CurrentUser CustomUserDetails userDetails) {
-        return ResponseEntity.ok(applicationService.ignoredApplicationByListener(id,message, userDetails.getUser()));
+        return ResponseEntity.ok(applicationService.ignoredApplicationByListener(id, message, userDetails.getUser()));
     }
 
 
@@ -130,8 +146,38 @@ public class ApplicationController {
     @GetMapping(GET_ALL_MY_APPLICATIONS)
     public HttpEntity<?> getMyApplications(@CurrentUser CustomUserDetails userDetails,
                                            @RequestParam(name = "page", defaultValue = AppConstants.DEFAULT_PAGE) int page,
-                                           @RequestParam(name = "size", defaultValue = AppConstants.DEFAULT_SIZE) int size) {
-        return ResponseEntity.ok(new ApiResponse("You applications", true, applicationService.getMyApplications(page, size, userDetails.getUser())));
+                                           @RequestParam(name = "size", defaultValue = AppConstants.DEFAULT_SIZE) int size,
+                                           @RequestParam(name = "search", defaultValue = "") String search,
+                                           @RequestParam(name = "status", defaultValue = "ALL") ApplicationRequestStatus statusReq,
+                                           @RequestParam(name = "sectionId", defaultValue = "0") Long sectionId
+    ) {
+        ApplicationStatus status;
+        if (statusReq.equals(ApplicationRequestStatus.ALL))
+            status = ApplicationStatus.ALL;
+        else if (statusReq.equals(ApplicationRequestStatus.CREATED))
+            status = ApplicationStatus.CREATED;
+        else if (statusReq.equals(ApplicationRequestStatus.INPROCESS))
+            status = ApplicationStatus.INPROCESS;
+        else status = ApplicationStatus.COMPLETED;
+
+
+        if (status.equals(ApplicationStatus.ALL) && search.equals("") && sectionId == 0) {
+            return ResponseEntity.ok(new ApiResponse("You applications", true, applicationService.getMyApplications(page, size, userDetails.getUser())));
+        } else if (!status.equals(ApplicationStatus.ALL) && search.equals("") && sectionId == 0) {
+            return ResponseEntity.ok(new ApiResponse("You applications", true, applicationService.getMyApplications(page, size, userDetails.getUser(), status)));
+        } else if (status.equals(ApplicationStatus.ALL) && !search.equals("") && sectionId == 0) {
+            return ResponseEntity.ok(new ApiResponse("You applications", true, applicationService.getMyApplications(page, size, userDetails.getUser(), search)));
+        } else if (status.equals(ApplicationStatus.ALL) && search.equals("") && sectionId != 0) {
+            return ResponseEntity.ok(new ApiResponse("You applications", true, applicationService.getMyApplications(page, size, userDetails.getUser(), sectionId)));
+        } else if (!status.equals(ApplicationStatus.ALL) && !search.equals("") && sectionId == 0) {
+            return ResponseEntity.ok(new ApiResponse("You applications", true, applicationService.getMyApplications(page, size, userDetails.getUser(), status, search)));
+        } else if (status.equals(ApplicationStatus.ALL) && !search.equals("") && sectionId != 0) {
+            return ResponseEntity.ok(new ApiResponse("You applications", true, applicationService.getMyApplications(page, size, userDetails.getUser(), search, sectionId)));
+        } else if (!status.equals(ApplicationStatus.ALL) && search.equals("") && sectionId != 0) {
+            return ResponseEntity.ok(new ApiResponse("You applications", true, applicationService.getMyApplications(page, size, userDetails.getUser(), sectionId, status)));
+        } else {
+            return ResponseEntity.ok(new ApiResponse("You applications", true, applicationService.getMyApplications(page, size, userDetails.getUser(), search, sectionId, status)));
+        }
     }
 
 
@@ -203,10 +249,35 @@ public class ApplicationController {
     public ResponseEntity<?> getDeadlineApp(@CurrentUser CustomUserDetails user,
                                             @RequestParam(name = "page", defaultValue = AppConstants.DEFAULT_PAGE) int page,
                                             @RequestParam(name = "size", defaultValue = AppConstants.DEFAULT_SIZE) int size) {
-        if (user.getUser().getStatus().equals(UserStatus.LISTENER)){
-            return ResponseEntity.ok(applicationService.getDeadlineApp(user.getUser().getSection(),size,page));
-        }else
+        if (user.getUser().getStatus().equals(UserStatus.LISTENER)) {
+            return ResponseEntity.ok(applicationService.getDeadlineApp(user.getUser().getSection(), size, page));
+        } else
             return ResponseEntity.ok("Permission denied");
+    }
+
+    @GetMapping(GET_DELAYED_APP)
+    public HttpEntity<?> getDelayedApp(
+            @CurrentUser CustomUserDetails user,
+            @RequestParam(name = "page", defaultValue = AppConstants.DEFAULT_PAGE) int page,
+            @RequestParam(name = "size", defaultValue = AppConstants.DEFAULT_SIZE) int size,
+            @RequestParam(name = "search", defaultValue = "") String search,
+            @RequestParam(name = "status") DocumentStatus status,
+            @RequestParam(name = "filterDate", defaultValue = "") String filterDate
+    ) {
+        return ResponseEntity.ok(applicationService.getDelayedApp(user.getUser(), page, size, status, search, filterDate));
+    }
+
+    @GetMapping(GET_ONE_DELAYED_APP)
+    public HttpEntity<?> getOneDelayedApp(
+            @CurrentUser CustomUserDetails user,
+            @PathVariable("id") UUID id
+    ) {
+        if (user.getUser().getStatus().equals(UserStatus.ADMIN)) {
+            return ResponseEntity.ok(applicationService.getOneDelayedApp(id));
+        } else {
+            return ResponseEntity.ok("Permission denied");
+        }
+
     }
 //
 //    // statistikani yil  boyicha olish

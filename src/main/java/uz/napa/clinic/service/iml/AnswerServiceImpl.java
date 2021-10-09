@@ -1,6 +1,8 @@
 package uz.napa.clinic.service.iml;
 
 import org.springframework.context.annotation.Lazy;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import uz.napa.clinic.entity.Answer;
 import uz.napa.clinic.entity.Application;
@@ -13,7 +15,9 @@ import uz.napa.clinic.payload.AnswerResponse;
 import uz.napa.clinic.payload.ApiResponse;
 import uz.napa.clinic.repository.*;
 import uz.napa.clinic.service.AnswerService;
+import uz.napa.clinic.service.iml.helper.HtmlConverter;
 
+import javax.mail.internet.MimeMessage;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,15 +34,18 @@ public class AnswerServiceImpl implements AnswerService {
     private final AttachmentRepository attachmentRepository;
     private final ApplicationRepository applicationRepository;
     private final DocumentRepository documentRepository;
+    private final JavaMailSender mailSender;
 
 
-    public AnswerServiceImpl(@Lazy ApplicationServiceImpl applicationService, UserRepository userRepository, AnswerRepository answerRepository, AttachmentRepository attachmentRepository, ApplicationRepository applicationRepository, DocumentRepository documentRepository) {
+
+    public AnswerServiceImpl(@Lazy ApplicationServiceImpl applicationService, UserRepository userRepository, AnswerRepository answerRepository, AttachmentRepository attachmentRepository, ApplicationRepository applicationRepository, DocumentRepository documentRepository, JavaMailSender mailSender) {
         this.applicationService = applicationService;
         this.userRepository = userRepository;
         this.answerRepository = answerRepository;
         this.attachmentRepository = attachmentRepository;
         this.applicationRepository = applicationRepository;
         this.documentRepository = documentRepository;
+        this.mailSender = mailSender;
     }
 
 
@@ -153,6 +160,7 @@ public class AnswerServiceImpl implements AnswerService {
                 Answer answer = findAnswer.get();
                 answer.setStatus(AnswerStatus.COMPLETED);
                 answerRepository.save(answer);
+                sendEmail(byAnswer.get().getApplication().getCreatedBy().getEmail(),byAnswer.get().getCreatedBy().getFullName());
                 return new ApiResponse("Answer sended to Applicant", true);
             } else {
                 throw new BadRequestException("Document not found by Answer ID: " + id);
@@ -165,6 +173,48 @@ public class AnswerServiceImpl implements AnswerService {
 
     public List<Answer> getByStatus(AnswerStatus status) {
         return answerRepository.findByStatusAndDeletedFalse(status);
+    }
+
+    public void sendEmail(String sendingEmail, String fullName) {
+        String from = "uzproclinic@gmail.com";
+
+//        try{
+//            SimpleMailMessage message = new SimpleMailMessage();
+//            message.setFrom(from);
+//            message.setTo(sendingEmail);
+//            message.setSubject("Qayta tiklash kaliti!!!");
+//            message.setText(link);
+//            mailSender.send(message);
+//        }
+        try {
+            MimeMessage message1 = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message1);
+
+            helper.setSubject("`Uz pro clinic` ariza ko'rib chiqildi");
+            helper.setFrom(from);
+            helper.setTo(sendingEmail);
+
+            boolean html = true;
+            helper.setText(HtmlConverter.convertCompleteHtml(fullName,"uz"), html);
+            mailSender.send(message1);
+        }
+//        catch (Exception e) {
+//
+//        }
+//
+//        String body = "smth";
+//        try {
+//            String from1 = "islomxujanazarov0501@gmail.com";
+//            MimeMessage message1 = mailSender.createMimeMessage();
+//            MimeMessageHelper helper = new MimeMessageHelper(message1);
+//            helper.setSubject("Reset Password");
+//            helper.setFrom(from1);
+//            helper.setTo(sendingEmail);
+//            helper.setText(link, true);
+//            mailSender.send(message);
+//        }
+        catch (Exception ignored) {
+        }
     }
 
     public AnswerResponse getAnswer(Answer answer) {
