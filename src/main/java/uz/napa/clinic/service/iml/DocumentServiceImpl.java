@@ -112,6 +112,18 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
+    public ResPageable getBossAnswers(User user, String search, int page, int size) {
+        Pageable pageable = CommonUtils.getPageable(page, size);
+        Page<Document> allByAnswerIn = documentRepository.findByStatusAndDeletedFalseAndCheckedBySectionAndApplicationTitleContainingIgnoreCaseOrderByCreatedAtDesc(DocumentStatus.WAITING, user.getSection(),search, pageable);
+        return new ResPageable(
+                allByAnswerIn.getContent().stream().map(DocumentResponse::fromEntity).collect(Collectors.toList()),
+                page,
+                allByAnswerIn.getTotalPages(),
+                allByAnswerIn.getTotalElements()
+        );
+    }
+
+    @Override
     public ApiResponse confirmByBoss(UUID id) {
         Optional<Document> byId = documentRepository.findById(id);
         if (byId.isPresent()) {

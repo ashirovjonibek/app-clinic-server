@@ -473,7 +473,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         List<DelayedApplications> all2 = delayedApplicationsRepository.findAll();
         response.put("allApplications",all.size());
         int a=0,b=0,n=0,completed=0,thisDayNew=0,thisDayComplete=0;
-        Date time=new Date();
+        Timestamp time=new Timestamp(new Date().getTime());
         for (int i = 0; i < all.size(); i++) {
             if (!all.get(i).getStatus().equals(ApplicationStatus.COMPLETED)&&!all.get(i).getStatus().equals(ApplicationStatus.CREATED)) a++;
             if ((!all.get(i).getStatus().equals(ApplicationStatus.COMPLETED)&&!all.get(i).getStatus().equals(ApplicationStatus.CREATED))&&
@@ -498,22 +498,22 @@ public class ApplicationServiceImpl implements ApplicationService {
             int aIn=0,bIn=0,nIn=0,completedIn=0,thisDayNewIn=0,thisDayCompleteIn=0,delayedIn=0;
             for (int j = 0; j < all.size(); j++) {
                 if (all1.get(i).getId().equals(all.get(j).getSection().getId()))counter++;
-                if (all1.get(i).getId().equals(all.get(j).getSection().getId())&&!all.get(i).getStatus().equals(ApplicationStatus.COMPLETED)&&!all.get(i).getStatus().equals(ApplicationStatus.CREATED)) aIn++;
-                if (all1.get(i).getId().equals(all.get(j).getSection().getId())&&(!all.get(i).getStatus().equals(ApplicationStatus.COMPLETED)&&!all.get(i).getStatus().equals(ApplicationStatus.CREATED))&&
-                        all.get(i).getDeadline().getTime()<time.getTime()
+                if (all1.get(i).getId().equals(all.get(j).getSection().getId())&&!all.get(j).getStatus().equals(ApplicationStatus.COMPLETED)&&!all.get(i).getStatus().equals(ApplicationStatus.CREATED)) aIn++;
+                if (all1.get(i).getId().equals(all.get(j).getSection().getId())&&(!all.get(j).getStatus().equals(ApplicationStatus.COMPLETED)&&!all.get(i).getStatus().equals(ApplicationStatus.CREATED))&&
+                        all.get(j).getDeadline().getTime()<time.getTime()
                 ) bIn++;
-                if (all1.get(i).getId().equals(all.get(j).getSection().getId())&&all.get(i).getStatus().equals(ApplicationStatus.CREATED))nIn++;
-                if (all1.get(i).getId().equals(all.get(j).getSection().getId())&&all.get(i).getStatus().equals(ApplicationStatus.COMPLETED))completedIn++;
-                if (all1.get(i).getId().equals(all.get(j).getSection().getId())&&all.get(i).getStatus().equals(ApplicationStatus.CREATED)&&
+                if (all1.get(i).getId().equals(all.get(j).getSection().getId())&&all.get(j).getStatus().equals(ApplicationStatus.CREATED))nIn++;
+                if (all1.get(i).getId().equals(all.get(j).getSection().getId())&&all.get(j).getStatus().equals(ApplicationStatus.COMPLETED))completedIn++;
+                if (all1.get(i).getId().equals(all.get(j).getSection().getId())&&
                         (
-                                all.get(i).getCreatedAt().getDay()==time.getDay()&&
-                                        all.get(i).getCreatedAt().getMonth()==time.getMonth()
+                                all.get(j).getCreatedAt().getDay()==time.getDay()&&
+                                        all.get(j).getCreatedAt().getMonth()==time.getMonth()
                         )
                 )thisDayNewIn++;
-                if (all1.get(i).getId().equals(all.get(j).getSection().getId())&&all.get(i).getStatus().equals(ApplicationStatus.COMPLETED)&&
+                if (all1.get(i).getId().equals(all.get(j).getSection().getId())&&all.get(j).getStatus().equals(ApplicationStatus.COMPLETED)&&
                         (
-                                all.get(i).getUpdatedAt().getDay()==time.getDay()&&
-                                        all.get(i).getUpdatedAt().getMonth()==time.getMonth()
+                                all.get(j).getUpdatedAt().getDay()==time.getDay()&&
+                                        all.get(j).getUpdatedAt().getMonth()==time.getMonth()
                         ))thisDayCompleteIn++;
             }
             for (int j = 0; j < all2.size(); j++) {
@@ -707,7 +707,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             return new ApiResponse("Document id is required!!!",false);
         }
         DelayedApplications delayedApplications=new DelayedApplications();
-        document.getApplication().setDeadline(new Timestamp(new Date().getTime()+request.getDelayDay()*86400*1000));
+        document.getApplication().setDeadline(addDays(new Timestamp(new Date().getTime()), request.getDelayDay()));
         delayedApplications.setComment(request.getComment());
         delayedApplications.setDelayDay(request.getDelayDay());
         delayedApplications.setDocument(document);

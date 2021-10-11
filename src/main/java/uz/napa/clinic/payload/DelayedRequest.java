@@ -13,7 +13,7 @@ import java.util.UUID;
 public class DelayedRequest {
     private UUID documentId;
 
-    private Integer delayDay;
+    private int delayDay;
 
     private String comment;
 }

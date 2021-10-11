@@ -18,14 +18,14 @@ import java.util.List;
 @Entity
 @Table(name = "answer")
 public class Answer extends BaseEntity {
-    @Column(name = "description")
+    @Column(name = "description",columnDefinition = "text")
     private String description;
 
     @OneToMany(fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Attachment> attachments;
 
-    @Column(name = "denied_message")
+    @Column(name = "denied_message",columnDefinition = "text")
     private String deniedMessage;
 
     @Enumerated(EnumType.STRING)
@@ -35,7 +35,7 @@ public class Answer extends BaseEntity {
     @ColumnDefault("true")
     private boolean liked;
 
-    @Column(name = "comment")
+    @Column(name = "comment",columnDefinition = "text")
     private String comment;
 
 

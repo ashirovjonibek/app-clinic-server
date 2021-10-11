@@ -32,6 +32,8 @@ public interface DocumentService {
 
     ResPageable getBossAnswers(User user, int page, int size);
 
+    ResPageable getBossAnswers(User user, String search, int page, int size);
+
     ApiResponse confirmByBoss(UUID id);
 
     ApiResponse denied(UUID id, String comment);

@@ -21,7 +21,7 @@ public class Application extends BaseEntity {
     @Column(name = "title")
     private String title;
 
-    @Column(name = "description", columnDefinition = "varchar(500)")
+    @Column(name = "description", columnDefinition = "text")
     private String description;
 
     @Column(name = "status")

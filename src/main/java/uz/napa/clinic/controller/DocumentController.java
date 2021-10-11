@@ -97,8 +97,14 @@ public class DocumentController {
     @GetMapping(GET_BOSS_DOCUMENTS)
     public ResponseEntity<?> getBossAnwers(@CurrentUser CustomUserDetails userDetails,
                                            @RequestParam(name = "page", defaultValue = AppConstants.DEFAULT_PAGE) int page,
-                                           @RequestParam(name = "size", defaultValue = AppConstants.DEFAULT_SIZE) int size) {
-        return ResponseEntity.ok(documentService.getBossAnswers(userDetails.getUser(), page, size));
+                                           @RequestParam(name = "size", defaultValue = AppConstants.DEFAULT_SIZE) int size,
+                                           @RequestParam(name = "search",defaultValue = "") String search
+                                           ) {
+        if (!search.equals("")){
+            return ResponseEntity.ok(documentService.getBossAnswers(userDetails.getUser(),search, page, size));
+        }else {
+            return ResponseEntity.ok(documentService.getBossAnswers(userDetails.getUser(), page, size));
+        }
     }
 
     // Listener tekshirgan arizalar
