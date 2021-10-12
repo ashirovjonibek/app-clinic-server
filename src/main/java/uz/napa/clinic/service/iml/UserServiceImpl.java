@@ -1,5 +1,7 @@
 package uz.napa.clinic.service.iml;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -19,6 +21,7 @@ import uz.napa.clinic.security.CustomUserDetails;
 import uz.napa.clinic.security.JwtTokenProvider;
 import uz.napa.clinic.service.UserService;
 import uz.napa.clinic.service.iml.helper.HtmlConverter;
+import uz.napa.clinic.utils.CommonUtils;
 
 import javax.mail.internet.MimeMessage;
 import javax.persistence.EntityManager;
@@ -250,9 +253,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<ApplicantResponse> applicantList() {
-        List<User> all = userRepository.findByStatusAndDeletedFalse(UserStatus.APPLICANT);
-        return all.stream().map(ApplicantResponse::fromEntity).collect(Collectors.toList());
+    public ResPageable applicantList(int size,int page) {
+        Pageable pageable = CommonUtils.getPageable(page, size);
+        Page<User> all = userRepository.findByStatusAndDeletedFalse(UserStatus.APPLICANT,pageable);
+        return new ResPageable(
+                all.getContent().stream().map(ApplicantResponse::fromEntity).collect(Collectors.toList()),
+                page,
+                all.getTotalPages(),
+                all.getTotalElements()
+        );
     }
 
     @Override
@@ -262,9 +271,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<ListenerResponse> userList(UserStatus status) {
-        List<User> moderList = userRepository.findByStatusAndDeletedFalseAndViewedTrue(status);
-        return moderList.stream().map(ListenerResponse::fromEntity).collect(Collectors.toList());
+    public ResPageable userList(UserStatus status,int page,int size) {
+        Pageable pageable = CommonUtils.getPageable(page, size);
+        Page<User> moderList = userRepository.findByStatusAndDeletedFalseAndViewedTrue(status,pageable);
+        return new ResPageable(
+                moderList.stream().map(ListenerResponse::fromEntity).collect(Collectors.toList()),
+                page,
+                moderList.getTotalPages(),
+                moderList.getTotalElements()
+        );
     }
 
     public List<ListenerResponse> userListViewFalse(UserStatus status) {

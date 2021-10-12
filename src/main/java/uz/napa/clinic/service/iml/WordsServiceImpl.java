@@ -1,14 +1,16 @@
 package uz.napa.clinic.service.iml;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import uz.napa.clinic.entity.Words;
 import uz.napa.clinic.payload.ApiResponse;
+import uz.napa.clinic.payload.ResPageable;
 import uz.napa.clinic.repository.WordsRepository;
 import uz.napa.clinic.service.WordsService;
+import uz.napa.clinic.utils.CommonUtils;
 
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class WordsServiceImpl implements WordsService {
@@ -47,8 +49,14 @@ public class WordsServiceImpl implements WordsService {
     }
 
     @Override
-    public List<Words> list() {
-        List<Words> all = wordsRepository.findAll();
-        return all.stream().map(words -> new Words(words.getId(), words.getName())).collect(Collectors.toList());
+    public ResPageable list(int page, int size) {
+        Pageable pageable = CommonUtils.getPageable(page, size);
+        Page<Words> all = wordsRepository.findAll(pageable);
+        return new ResPageable(
+                all.getContent(),
+                page,
+                all.getTotalPages(),
+                all.getTotalElements()
+        );
     }
 }

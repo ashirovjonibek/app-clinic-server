@@ -15,6 +15,7 @@ import uz.napa.clinic.repository.UserRepository;
 import uz.napa.clinic.security.CurrentUser;
 import uz.napa.clinic.security.CustomUserDetails;
 import uz.napa.clinic.service.UserService;
+import uz.napa.clinic.utils.AppConstants;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -137,8 +138,10 @@ public class AuthController {
     //Applicant List
     @PreAuthorize("hasAnyAuthority('ADMIN','MODERATOR','SUPER_MODERATOR','SUPER_MODERATOR_AND_MODERATOR')")
     @GetMapping(APPLICANT_LIST)
-    public HttpEntity<?> getApplicantList() {
-        return ResponseEntity.ok(userService.applicantList());
+    public HttpEntity<?> getApplicantList(@RequestParam(name = "size",defaultValue = AppConstants.DEFAULT_SIZE) int size,
+                                          @RequestParam(name = "page",defaultValue = AppConstants.DEFAULT_PAGE) int page
+                                          ) {
+        return ResponseEntity.ok(userService.applicantList(size,page));
     }
 
 
@@ -167,8 +170,10 @@ public class AuthController {
     //Listenerlar listini olish
     @PreAuthorize("hasAnyAuthority('ADMIN','MODERATOR','SUPER_MODERATOR','SUPER_MODERATOR_AND_MODERATOR')")
     @GetMapping(LISTENER_LIST)
-    public HttpEntity<?> getListenerList() {
-        return ResponseEntity.ok(userService.userList(UserStatus.LISTENER));
+    public HttpEntity<?> getListenerList(@RequestParam(name = "size",defaultValue = AppConstants.DEFAULT_SIZE) int size,
+                                         @RequestParam(name = "page",defaultValue = AppConstants.DEFAULT_PAGE) int page
+    ) {
+        return ResponseEntity.ok(userService.userList(UserStatus.LISTENER,page,size));
     }
 
     @GetMapping(LISTENER_LIST_VIEW_FALSE)
@@ -179,21 +184,27 @@ public class AuthController {
     //Bo'lim boshliqlari listini olish
     @PreAuthorize("hasAnyAuthority('ADMIN','SUPER_MODERATOR','SUPER_MODERATOR_AND_MODERATOR')")
     @GetMapping(GET_BOSS)
-    public ResponseEntity<?> getBoss() {
-        return ResponseEntity.ok(userService.userList(UserStatus.MODERATOR));
+    public ResponseEntity<?> getBoss(@RequestParam(name = "size",defaultValue = AppConstants.DEFAULT_SIZE) int size,
+                                     @RequestParam(name = "page",defaultValue = AppConstants.DEFAULT_PAGE) int page
+    ) {
+        return ResponseEntity.ok(userService.userList(UserStatus.MODERATOR,page,size));
     }
 
     //Moderatorlar listini olish
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     @GetMapping(GET_MODERATOR)
-    public ResponseEntity<?> getModerators() {
-        return ResponseEntity.ok(userService.userList(UserStatus.SUPER_MODERATOR));
+    public ResponseEntity<?> getModerators(@RequestParam(name = "size",defaultValue = AppConstants.DEFAULT_SIZE) int size,
+                                           @RequestParam(name = "page",defaultValue = AppConstants.DEFAULT_PAGE) int page
+    ) {
+        return ResponseEntity.ok(userService.userList(UserStatus.SUPER_MODERATOR,page,size));
     }
 
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     @GetMapping(GET_SUPER_MODERATOR_AND_MODERATOR)
-    public ResponseEntity<?> getHybrid() {
-        return ResponseEntity.ok(userService.userList(UserStatus.SUPER_MODERATOR_AND_MODERATOR));
+    public ResponseEntity<?> getHybrid(@RequestParam(name = "size",defaultValue = AppConstants.DEFAULT_SIZE) int size,
+                                       @RequestParam(name = "page",defaultValue = AppConstants.DEFAULT_PAGE) int page
+    ) {
+        return ResponseEntity.ok(userService.userList(UserStatus.SUPER_MODERATOR_AND_MODERATOR,page,size));
     }
 
     //Userlarni o'chirish

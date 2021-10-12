@@ -31,11 +31,11 @@ public interface UserService {
 
     ApiResponse updateListenerByRole(Long roleId, UUID userId);
 
-    List<ApplicantResponse> applicantList();
+    ResPageable applicantList(int size, int page);
 
     List<ListenerResponse> listenerList(UserStatus status, Long sectionId);
 
-    List<ListenerResponse> userList(UserStatus status);
+    ResPageable userList(UserStatus status, int page, int size);
 
     List<ListenerResponse> userListViewFalse(UserStatus status);
 

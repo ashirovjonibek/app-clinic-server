@@ -5,9 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import uz.napa.clinic.entity.Permission;
-import uz.napa.clinic.entity.Role;
-import uz.napa.clinic.entity.User;
+import uz.napa.clinic.entity.*;
 import uz.napa.clinic.entity.enums.UserStatus;
 import uz.napa.clinic.repository.*;
 
@@ -40,6 +38,12 @@ public class DataLoader implements CommandLineRunner {
     DistrictRepository districtRepository;
     @Autowired
     SectionRepository sectionRepository;
+
+    @Autowired
+    WordsRepository wordsRepository;
+
+    @Autowired
+    LangRepository langRepository;
 //    final
 //    AttachmentTypeRepository attachmentTypeRepository;
 
@@ -93,6 +97,100 @@ public class DataLoader implements CommandLineRunner {
                             passwordEncoder.encode("1"),
                             roleRepository.findAll()
                     ));
+
+
+
+            List<Words> wordsList=new ArrayList<>();
+            wordsList.add(new Words(langRepository.save(
+                    new Lang(
+                            "O'zbekiston Respublikasining Konstitutsiyasi",
+                            "Конституция Республики Узбекистан",
+                            "Ўзбекистон Республикасининг Конституцияси"
+                    )
+            ),langRepository.save(new Lang(
+                    "https://lex.uz/docs/-20596",
+                    "https://lex.uz/docs/35869",
+                    "https://lex.uz/docs/20596"
+            ))));
+            wordsList.add(new Words(langRepository.save(
+                    new Lang(
+                            "O'zbekiston Respublikasining «Prokuratura to'g'risida»gi Qonuni",
+                            "Закон Республики Узбекистан",
+                            "Ўзбекистон Республикасининг «Прокуратура тўғрисида»ги Қонуни"
+                    )
+            ),langRepository.save(new Lang(
+                    "https://lex.uz/docs/-106197",
+                    "https://lex.uz/docs/105533",
+                    "https://lex.uz/docs/106197"
+            ))));
+            wordsList.add(new Words(langRepository.save(
+                    new Lang(
+                            "O'zbekiston Respublikasining «O'zbekiston Respublikasi prokuratura organlari xodimlari  kunini belgilash to'g'risida»gi Qonuni",
+                            "Закон Республики Узбекистан «Об установлении дня работников органов прокуратуры Республики Узбекистан»",
+                            "Ўзбекистон Республикасининг «Ўзбекистон Республикаси прокуратура органлари ходимлари кунини белгилаш тўғрисида»ги Қонуни"
+                    )
+            ),langRepository.save(new Lang(
+                    "https://lex.uz/docs/-3080268",
+                    "https://lex.uz/docs/3080266",
+                    "https://lex.uz/docs/3080268"
+            ))));
+            wordsList.add(new Words(langRepository.save(
+                    new Lang(
+                            "O'zbekiston Respublikasi Prezidentining «O'zbekiston Respublikasi prokuraturasi organlari  to'g'risida»gi Farmoni",
+                            "Указ Президента Республики Узбекистан «Об органах прокуратуры Республики Узбекистан»",
+                            "Ўзбекистон Республикаси Президентининг «Ўзбекистон Республикаси прокуратураси органлари тўғрисида»ги Фармони"
+                    )
+            ),langRepository.save(new Lang(
+                    "https://lex.uz/docs/-147159",
+                    "https://lex.uz/docs/147166",
+                    "https://lex.uz/docs/147159"
+            ))));
+            wordsList.add(new Words(langRepository.save(
+                    new Lang(
+                            "O'zbekiston Respublikasi Prezidentining «Prokuratura organlari kadrlarini tayyorlash, qayta tayyorlash va ularning malakasini oshirish tizimini tubdan takomillashtirish chora-tadbirlari  to'g'risida»gi Farmoni",
+                            "Указ Президента Республики Узбекистан «О мерах по коренному совершенствованию системы подготовки, переподготовки и повышения квалификации кадров органов прокуратуры»",
+                            "Ўзбекистон Республикаси Президентининг «Прокуратура органлари кадрларини тайёрлаш, қайта тайёрлаш ва уларнинг малакасини ошириш тизимини тубдан такомиллаштириш чора-тадбирлари тўғрисида»ги Фармони"
+                    )
+            ),langRepository.save(new Lang(
+                    "https://www.lex.uz/docs/3727063",
+                    "https://www.lex.uz/docs/3727138",
+                    "https://www.lex.uz/docs/3727063"
+            ))));
+            wordsList.add(new Words(langRepository.save(
+                    new Lang(
+                            "O'zbekiston Respublikasi Prezidentining «Huquqbuzarliklar profilaktikasi va jinoyatchilikka  qarshi kurashish tizimini yanada takomillashtirish chora-tadbirlari to'g'risida»gi Qarori",
+                            "Постановление Президента Республики Узбекистан «О мерах по дальнейшему совершенствованию системы профилактики правонарушений и борьбы с преступностью»",
+                            "Ўзбекистон Республикаси Президентининг «Ҳуқуқбузарликлар профилактикаси ва жиноятчиликка қарши курашиш тизимини янада такомиллаштириш чора-тадбирлари тўғрисида»ги Қарори"
+                    )
+            ),langRepository.save(new Lang(
+                    "https://lex.uz/docs/3141186",
+                    "https://lex.uz/docs/3141184",
+                    "https://lex.uz/docs/3141186"
+            ))));
+            wordsList.add(new Words(langRepository.save(
+                    new Lang(
+                            "O'zbekiston Respublikasi Prezidentining «Ijtimoiy-iqtisodiy islohotlarni amalga oshirish,  mamlakatni modernizatsiya qilish, inson huquq va erkinliklarining ishonchli himoyasini  ta'minlashda prokuratura organlarining rolini kuchaytirish to'g'risida»gi Farmoni   ",
+                            "Указ Президента Республики Узбекистан «Об усилении роли органов прокуратуры в реализации социально-экономических реформ и модернизации страны, обеспечении надежной защиты прав и свобод человека»",
+                            "Ўзбекистон Республикаси Президентининг «Ижтимоий-иқтисодий ислоҳотларни амалга ошириш, мамлакатни модернизация қилиш, инсон ҳуқуқ ва эркинликларининг ишончли ҳимоясини таъминлашда прокуратура органларининг ролини кучайтириш тўғрисида»ги Фармони   "
+                    )
+            ),langRepository.save(new Lang(
+                    "https://www.lex.uz/docs/3177796",
+                    "https://www.lex.uz/docs/3177798",
+                    "https://www.lex.uz/docs/3177796"
+            ))));
+            wordsList.add(new Words(langRepository.save(
+                    new Lang(
+                            "O'zbekiston Respublikasi Prezidentining «Jinoiy-huquqiy statistika tizimini tubdan  takomillashtirish va jinoyatlarni tizimli tahlil qilish samaradorligini oshirish chora-tadbirlari  to'g'risida» Farmoni",
+                            "Указ Президента Республики Узбекистан «О мерах по коренному совершенствованию системы уголовно-правовой статистики и повышению эффективности системного анализа преступлений»",
+                            "Ўзбекистон Республикаси Президентининг «Жиноий-ҳуқуқий статистика тизимини тубдан такомиллаштириш ва жиноятларни тизимли таҳлил қилиш самарадорлигини ошириш чора-тадбирлари тўғрисида» Фармони"
+                    )
+            ),langRepository.save(new Lang(
+                    "https://lex.uz/ru/docs/-4034449",
+                    "https://lex.uz/ru/docs/4034455",
+                    "https://lex.uz/ru/docs/4034449"
+            ))));
+
+            wordsRepository.saveAll(wordsList);
 
 
 //            attachmentTypeRepository.save(new AttachmentType("image/jpeg"))

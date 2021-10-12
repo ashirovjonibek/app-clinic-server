@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import uz.napa.clinic.entity.Words;
 import uz.napa.clinic.payload.ApiResponse;
 import uz.napa.clinic.service.iml.WordsServiceImpl;
+import uz.napa.clinic.utils.AppConstants;
 
 @RestController
 @RequestMapping("/api/words")
@@ -37,8 +38,9 @@ public class WordsController {
     }
 
     @GetMapping(GET_ALL)
-    public HttpEntity<?> getWordsList() {
-        return ResponseEntity.ok(wordsService.list());
+    public HttpEntity<?> getWordsList(@RequestParam(name = "page",defaultValue = AppConstants.DEFAULT_PAGE) int page,
+                                      @RequestParam(name = "size",defaultValue = AppConstants.DEFAULT_SIZE) int size) {
+        return ResponseEntity.ok(wordsService.list(page,size));
     }
 
     @DeleteMapping(DELETE)

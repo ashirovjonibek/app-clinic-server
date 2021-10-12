@@ -1,5 +1,6 @@
 package uz.napa.clinic.repository;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,6 +11,7 @@ import uz.napa.clinic.entity.User;
 import uz.napa.clinic.payload.ListenerResponse;
 import uz.napa.clinic.projection.ListenerRating;
 
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -44,11 +46,11 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     List<User> findByStatusAndSectionAndDeletedFalse(UserStatus status, Section section);
 
-    List<User> findByStatusAndDeletedFalse(UserStatus status);
+    Page<User> findByStatusAndDeletedFalse(UserStatus status, Pageable pageable);
 
     User findByStatusAndSection(UserStatus status, Section section);
 
-    List<User> findByStatusAndDeletedFalseAndViewedTrue(UserStatus status);
+    Page<User> findByStatusAndDeletedFalseAndViewedTrue(UserStatus status,Pageable pageable);
 
     List<User> findByStatusAndDeletedFalseAndViewedFalse(UserStatus status);
 

@@ -6,6 +6,8 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 
 import javax.persistence.*;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.HashMap;
 
 @Getter
@@ -21,7 +23,16 @@ public class Words {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name", columnDefinition = "jsonb")
-    @Type(type = "jsonb")
-    private HashMap<String, String> name;
+    @OneToOne
+    private Lang name;
+
+    @OneToOne
+    private Lang url;
+
+    Timestamp createdAt=new Timestamp(new Date().getTime());
+
+    public Words(Lang name,Lang url) {
+        this.name = name;
+        this.url=url;
+    }
 }
