@@ -36,6 +36,8 @@ public class DocumentController {
     private static final String GET_DOCUMENT_APPLICATION_TO_SEND = "/sending";
     private static final String GET_FEEDBACK = "/answer/feedback";
     private static final String GET_BY_STATUS = "/get-by-status";
+    private static final String GET_BY_CHECKED_BY_LISTENER = "/get-by-checked-listener";
+
 
     private final DocumentService documentService;
 
@@ -65,6 +67,14 @@ public class DocumentController {
     // Hech kim tekshirmayotgan arizalar
     @GetMapping(GET_APPLICATIONS_LISTENER_IS_NULL)
     public ResponseEntity<?> getAllApplicationListenerIsNull(@RequestParam(name = "page", defaultValue = AppConstants.DEFAULT_PAGE) int page,
+                                                             @RequestParam String sts,
+                                                             @CurrentUser CustomUserDetails user,
+                                                             @RequestParam(name = "size", defaultValue = AppConstants.DEFAULT_SIZE) int size) {
+        return ResponseEntity.ok(documentService.getAllApplicationListenerIsNull(page, size,user.getUser(),sts));
+    }
+
+    @GetMapping(GET_BY_CHECKED_BY_LISTENER)
+    public ResponseEntity<?> getAllApplicationListenerIsNotNul(@RequestParam(name = "page", defaultValue = AppConstants.DEFAULT_PAGE) int page,
                                                              @RequestParam String sts,
                                                              @CurrentUser CustomUserDetails user,
                                                              @RequestParam(name = "size", defaultValue = AppConstants.DEFAULT_SIZE) int size) {

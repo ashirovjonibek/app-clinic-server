@@ -3,6 +3,9 @@ package uz.napa.clinic.service.iml;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileUrlResource;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
@@ -28,8 +31,12 @@ import uz.napa.clinic.service.AttachmentService;
 import uz.napa.clinic.utils.CommonUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.UUID;
@@ -154,9 +161,12 @@ public class AttachmentServiceImpl implements AttachmentService {
                         AttachStatus.FROM_THE_APPLICANT:
                         AttachStatus.FOR_NORMATIVE_LEGAL_BASE
         );
-
+        attachment.setCreatedBy(user);
+        attachment.setUpdatedBy(user);
+        attachment.setCreatedAt(new Timestamp(new Date().getTime()));
+        attachment.setUpdatedAt(new Timestamp(new Date().getTime()));
         Attachment savedAttachment = attachmentRepository.save(attachment);
-        savedAttachment.setUploadPath(String.format("%s/%d/%d/%d/%s.%s",uploadFolder,1970+date.getYear(),1+date.getMonth(),date.getDay(),
+        savedAttachment.setUploadPath(String.format("%d/%d/%d/%s.%s",1900+date.getYear(),1+date.getMonth(),date.getDate(),
                 savedAttachment.getId(),
                 savedAttachment.getFileExtension()
                 ));
@@ -193,15 +203,48 @@ public class AttachmentServiceImpl implements AttachmentService {
     public HttpEntity<?> getFileById(UUID id) throws IOException {
 
         Attachment attachment = attachmentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("getAttachment"));
+//        File file=new File(String.format(attachment.getUploadPath()));
+//
+//        InputStreamResource inputStreamResource=new InputStreamResource(new FileInputStream(file.getAbsoluteFile()));
+////
+////
+//            return ResponseEntity.ok().contentType(MediaType.valueOf(attachment.getContentType()))
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + attachment.getName() + "\"")
+//                .header(HttpHeaders.CONTENT_TYPE, attachment.getContentType())
+//                .contentLength(attachment.getSize())
+//                .body(inputStreamResource);
 
-
-        return ResponseEntity.ok().contentType(MediaType.valueOf(attachment.getContentType()))
+//        Path path = Paths.get(attachment.getUploadPath());
+//        Resource resource = null;
+//        try {
+//            resource = new UrlResource(path.toUri());
+//        } catch (MalformedURLException e) {
+//            e.printStackTrace();
+//        }
+//        return ResponseEntity.ok()
+//                .contentType(MediaType.parseMediaType(attachment.getContentType()))
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+//                .body(resource);
+        System.out.println(String.format("%s/%s",uploadFolder,attachment.getUploadPath()));
+        FileUrlResource fileUrlResource=null;
+        try {
+            fileUrlResource = new FileUrlResource(String.format("%s/%s",uploadFolder,attachment.getUploadPath()));
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return ResponseEntity.ok().contentType(MediaType.parseMediaType(attachment.getContentType()))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + attachment.getName() + "\"")
                 .contentLength(attachment.getSize())
-                .body(new FileUrlResource(attachment.getUploadPath()));
+                .body(fileUrlResource);
     }
     private String getExt(String fileName){
         return fileName.substring(fileName.lastIndexOf(".")+1);
     }
 
+    public ApiResponse delete(UUID id) {
+        Attachment attachment = attachmentRepository.findById(id).orElseThrow(() -> new IllegalStateException("File not found for delete id!!!"));
+        attachment.setDeleted(true);
+        Attachment save = attachmentRepository.save(attachment);
+        return new ApiResponse(save.isDeleted()?"File deleted!!!":"Error for deleted!!!",save.isDeleted());
+    }
 }

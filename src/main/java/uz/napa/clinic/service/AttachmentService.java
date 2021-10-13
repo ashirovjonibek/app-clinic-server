@@ -21,4 +21,6 @@ public interface AttachmentService {
     HttpEntity<?> getAudioFile(UUID id) throws MalformedURLException;
 
     ResPageable getNormativeLegalBase(int page, int size);
+
+    ApiResponse delete(UUID id);
 }

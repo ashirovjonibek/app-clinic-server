@@ -4,9 +4,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
+import uz.napa.clinic.entity.Lang;
 import uz.napa.clinic.entity.Words;
+import uz.napa.clinic.payload.WordRequest;
 import uz.napa.clinic.payload.ApiResponse;
 import uz.napa.clinic.payload.ResPageable;
+import uz.napa.clinic.repository.LangRepository;
 import uz.napa.clinic.repository.WordsRepository;
 import uz.napa.clinic.service.WordsService;
 import uz.napa.clinic.utils.CommonUtils;
@@ -15,14 +18,27 @@ import uz.napa.clinic.utils.CommonUtils;
 @Service
 public class WordsServiceImpl implements WordsService {
     private final WordsRepository wordsRepository;
+    private final LangRepository langRepository;
 
-    public WordsServiceImpl(WordsRepository wordsRepository) {
+    public WordsServiceImpl(WordsRepository wordsRepository, LangRepository langRepository) {
         this.wordsRepository = wordsRepository;
+        this.langRepository = langRepository;
     }
 
     @Override
-    public ApiResponse create(Words request) {
-        wordsRepository.save(request);
+    public ApiResponse create(WordRequest request) {
+        Words word=new Words();
+        word.setName(langRepository.save(new Lang(
+                request.getNameuz(),
+                request.getNameru(),
+                request.getNameen()
+        )));
+        word.setUrl(langRepository.save(new Lang(
+                request.getUrluz(),
+                request.getUrlru(),
+                request.getUrlen()
+        )));
+        wordsRepository.save(word);
         return new ApiResponse("So'z kiritildi !", true);
     }
 
@@ -41,9 +57,14 @@ public class WordsServiceImpl implements WordsService {
     }
 
     @Override
-    public ApiResponse update(Long id, Words request) {
-        Words words = getById(id);
-        words.setName(request.getName());
+    public ApiResponse update(WordRequest request) {
+        Words words = getById(request.getId());
+        words.getName().setUz(request.getNameuz());
+        words.getName().setRu(request.getNameru());
+        words.getName().setEn(request.getNameen());
+        words.getUrl().setUz(request.getUrluz());
+        words.getUrl().setRu(request.getUrlru());
+        words.getUrl().setEn(request.getUrlen());
         wordsRepository.save(words);
         return new ApiResponse("So'z o'zgartirildi !", true);
     }

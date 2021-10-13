@@ -36,6 +36,7 @@ public class AttachmentController {
 
     @PostMapping(CREATE)
     public HttpEntity<?> uploadFile(@CurrentUser CustomUserDetails userDetails, MultipartHttpServletRequest file) throws IOException {
+        System.out.println(userDetails.getUser().getFullName());
         ApiResponse response = attachmentService.uploadFile(file,userDetails.getUser());
         return ResponseEntity.status(response.isSuccess() ? HttpStatus.CREATED : HttpStatus.CONFLICT).body(response);
     }
@@ -60,5 +61,13 @@ public class AttachmentController {
     public HttpEntity<?> getNormativeLegalBase(@RequestParam(name = "page",defaultValue = AppConstants.DEFAULT_PAGE) int page,
                                                @RequestParam(name = "size",defaultValue = AppConstants.DEFAULT_SIZE) int size){
         return ResponseEntity.ok(attachmentService.getNormativeLegalBase(page,size));
+    }
+
+    @DeleteMapping
+    public HttpEntity<?> deleteFile(@RequestParam UUID id){
+
+        return ResponseEntity.ok(
+                attachmentService.delete(id)
+        );
     }
 }
