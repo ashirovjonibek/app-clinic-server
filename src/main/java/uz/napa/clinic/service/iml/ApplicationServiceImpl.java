@@ -498,7 +498,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             int aIn=0,bIn=0,nIn=0,completedIn=0,thisDayNewIn=0,thisDayCompleteIn=0,delayedIn=0;
             for (int j = 0; j < all.size(); j++) {
                 if (all1.get(i).getId().equals(all.get(j).getSection().getId()))counter++;
-                if (all1.get(i).getId().equals(all.get(j).getSection().getId())&&!all.get(j).getStatus().equals(ApplicationStatus.COMPLETED)&&!all.get(i).getStatus().equals(ApplicationStatus.CREATED)) aIn++;
+                if (all1.get(i).getId().equals(all.get(j).getSection().getId())&&all.get(j).getStatus().equals(ApplicationStatus.INPROCESS)&&all.get(i).getStatus().equals(ApplicationStatus.DENIED)) aIn++;
                 if (all1.get(i).getId().equals(all.get(j).getSection().getId())&&(!all.get(j).getStatus().equals(ApplicationStatus.COMPLETED)&&!all.get(i).getStatus().equals(ApplicationStatus.CREATED))&&
                         all.get(j).getDeadline().getTime()<time.getTime()
                 ) bIn++;
