@@ -118,7 +118,7 @@ public class UserServiceImpl implements UserService {
             if (validBirthDate(request.getBirthDate())) {
                 User user = new User();
                 user.setFullName(request.getFullName());
-                user.setNation(entityManager.getReference(Nation.class, request.getNationId()));
+//                user.setNation(entityManager.getReference(Nation.class, request.getNationId()));
                 user.setGender(request.getGender());
                 user.setBirthDate(request.getBirthDate());
                 user.setDistrict(entityManager.getReference(District.class, request.getDistrictId()));

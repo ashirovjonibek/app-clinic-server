@@ -16,5 +16,5 @@ public interface AttachmentRepository extends JpaRepository<Attachment, UUID> {
     @Query(value ="delete *from attachment where id=:id" ,nativeQuery = true)
     boolean delete(UUID id);
 
-    Page<Attachment> findAllByStatusAndDeletedFalse(AttachStatus status,Pageable pageable);
+    Page<Attachment> findAllByStatusAndFileExtensionAndDeletedFalse(AttachStatus status,String ext,Pageable pageable);
 }

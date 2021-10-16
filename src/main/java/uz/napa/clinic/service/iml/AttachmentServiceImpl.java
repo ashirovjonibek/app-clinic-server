@@ -30,10 +30,10 @@ import uz.napa.clinic.repository.AttachmentTypeRepository;
 import uz.napa.clinic.service.AttachmentService;
 import uz.napa.clinic.utils.CommonUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
@@ -121,16 +121,16 @@ public class AttachmentServiceImpl implements AttachmentService {
         AttachmentContent attachmentContent = attachmentContentRepository.findByAttachment(attachment);
 
 
-        return ResponseEntity.ok().contentType(MediaType.valueOf(attachment.getContentType().replace("*","ogg")))
+        return ResponseEntity.ok().contentType(MediaType.valueOf(attachment.getContentType().replace("*", "ogg")))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + attachment.getName() + "\"")
                 .contentLength(attachment.getSize())
                 .body(new FileUrlResource(attachment.getUploadPath()));
     }
 
     @Override
-    public ResPageable getNormativeLegalBase(int page,int size) {
+    public ResPageable getNormativeLegalBase(int page, int size) {
         Pageable pageable = CommonUtils.getPageable(page, size);
-        Page<Attachment> attachments = attachmentRepository.findAllByStatusAndDeletedFalse(AttachStatus.FOR_NORMATIVE_LEGAL_BASE, pageable);
+        Page<Attachment> attachments = attachmentRepository.findAllByStatusAndFileExtensionAndDeletedFalse(AttachStatus.FOR_NORMATIVE_LEGAL_BASE,"pdf", pageable);
         return new ResPageable(
                 attachments.getContent().stream().map(attachment -> AttachResponse.toFront(attachment)).collect(Collectors.toList()),
                 page,
@@ -145,9 +145,9 @@ public class AttachmentServiceImpl implements AttachmentService {
     public ApiResponse uploadFile(MultipartHttpServletRequest request, User user) {
         Iterator<String> fileNames = request.getFileNames();
         MultipartFile file = request.getFile(fileNames.next());
-        Date date=new Date();
-        File folder=new File(String.format("%s/%d/%d/%d",uploadFolder,1900+date.getYear(),1+date.getMonth(),date.getDate()));
-        if (!folder.exists()&&folder.mkdirs()){
+        Date date = new Date();
+        File folder = new File(String.format("%s/%d/%d/%d", uploadFolder, 1900 + date.getYear(), 1 + date.getMonth(), date.getDate()));
+        if (!folder.exists() && folder.mkdirs()) {
             System.out.println("folder created!!!");
         }
 
@@ -157,8 +157,8 @@ public class AttachmentServiceImpl implements AttachmentService {
                 file.getSize(),
                 getExt(file.getOriginalFilename()),
                 uploadFolder,
-                !user.getStatus().equals(UserStatus.ADMIN)?
-                        AttachStatus.FROM_THE_APPLICANT:
+                !user.getStatus().equals(UserStatus.ADMIN) ?
+                        AttachStatus.FROM_THE_APPLICANT :
                         AttachStatus.FOR_NORMATIVE_LEGAL_BASE
         );
         attachment.setCreatedBy(user);
@@ -166,36 +166,20 @@ public class AttachmentServiceImpl implements AttachmentService {
         attachment.setCreatedAt(new Timestamp(new Date().getTime()));
         attachment.setUpdatedAt(new Timestamp(new Date().getTime()));
         Attachment savedAttachment = attachmentRepository.save(attachment);
-        savedAttachment.setUploadPath(String.format("%d/%d/%d/%s.%s",1900+date.getYear(),1+date.getMonth(),date.getDate(),
+        savedAttachment.setUploadPath(String.format("%d/%d/%d/%s.%s", 1900 + date.getYear(), 1 + date.getMonth(), date.getDate(),
                 savedAttachment.getId(),
                 savedAttachment.getFileExtension()
-                ));
+        ));
         attachmentRepository.save(savedAttachment);
-        folder=folder.getAbsoluteFile();
-        File file1=new File(folder,String.format("%s.%s",savedAttachment.getId(),savedAttachment.getFileExtension()));
+        folder = folder.getAbsoluteFile();
+        File file1 = new File(folder, String.format("%s.%s", savedAttachment.getId(), savedAttachment.getFileExtension()));
         try {
             file.transferTo(file1);
             return new ApiResponse("File saved!!!", true, savedAttachment.getId());
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
             return new ApiResponse("Error for saved!!!", true, savedAttachment.getId());
         }
-//        try {
-//            AttachmentContent attachmentContent = new AttachmentContent(
-//                    savedAttachment,
-//                    file.getBytes()
-//            );
-//            attachmentContentRepository.save(attachmentContent);
-//
-//
-//            return new ApiResponse("", true, savedAttachment.getId());
-//
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            return null;
-//        }
-
 
     }
 
@@ -203,48 +187,46 @@ public class AttachmentServiceImpl implements AttachmentService {
     public HttpEntity<?> getFileById(UUID id) throws IOException {
 
         Attachment attachment = attachmentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("getAttachment"));
-//        File file=new File(String.format(attachment.getUploadPath()));
-//
-//        InputStreamResource inputStreamResource=new InputStreamResource(new FileInputStream(file.getAbsoluteFile()));
-////
-////
-//            return ResponseEntity.ok().contentType(MediaType.valueOf(attachment.getContentType()))
-//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + attachment.getName() + "\"")
-//                .header(HttpHeaders.CONTENT_TYPE, attachment.getContentType())
-//                .contentLength(attachment.getSize())
-//                .body(inputStreamResource);
-
-//        Path path = Paths.get(attachment.getUploadPath());
-//        Resource resource = null;
-//        try {
-//            resource = new UrlResource(path.toUri());
-//        } catch (MalformedURLException e) {
-//            e.printStackTrace();
-//        }
-//        return ResponseEntity.ok()
-//                .contentType(MediaType.parseMediaType(attachment.getContentType()))
-//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-//                .body(resource);
-        System.out.println(String.format("%s/%s",uploadFolder,attachment.getUploadPath()));
-        FileUrlResource fileUrlResource=null;
+        Path path = Paths.get(attachment.getUploadPath());
+        Resource resource = null;
         try {
-            fileUrlResource = new FileUrlResource(String.format("%s/%s",uploadFolder,attachment.getUploadPath()));
-        }catch (Exception e){
+            resource = new UrlResource(path.toUri());
+        } catch (MalformedURLException e) {
             e.printStackTrace();
         }
-        return ResponseEntity.ok().contentType(MediaType.parseMediaType(attachment.getContentType()))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + attachment.getName() + "\"")
-                .contentLength(attachment.getSize())
-                .body(fileUrlResource);
+        if (attachment.getFileExtension().equals("pdf")) {
+
+            File file = new File(String.format("%s/%s", uploadFolder, attachment.getUploadPath()));
+            byte[] bytes = Files.readAllBytes(file.toPath());
+            return ResponseEntity.ok().contentType(MediaType.parseMediaType(attachment.getContentType()))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + attachment.getName() + "\"")
+                    .contentLength(attachment.getSize())
+                    .body(bytes);
+
+        } else {
+
+            FileUrlResource fileUrlResource = null;
+            try {
+                fileUrlResource = new FileUrlResource(String.format("%s/%s", uploadFolder, attachment.getUploadPath()));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(attachment.getContentType()))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + attachment.getName() + "\"")
+                    .body(fileUrlResource);
+        }
+
     }
-    private String getExt(String fileName){
-        return fileName.substring(fileName.lastIndexOf(".")+1);
+
+    private String getExt(String fileName) {
+        return fileName.substring(fileName.lastIndexOf(".") + 1);
     }
 
     public ApiResponse delete(UUID id) {
         Attachment attachment = attachmentRepository.findById(id).orElseThrow(() -> new IllegalStateException("File not found for delete id!!!"));
         attachment.setDeleted(true);
         Attachment save = attachmentRepository.save(attachment);
-        return new ApiResponse(save.isDeleted()?"File deleted!!!":"Error for deleted!!!",save.isDeleted());
+        return new ApiResponse(save.isDeleted() ? "File deleted!!!" : "Error for deleted!!!", save.isDeleted());
     }
 }
