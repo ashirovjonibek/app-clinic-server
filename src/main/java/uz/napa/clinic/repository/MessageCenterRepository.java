@@ -14,7 +14,7 @@ public interface MessageCenterRepository extends JpaRepository<MessageCenter, UU
 
     List<MessageCenter> findAllByToIdAndDeletedFalseAndReadFalseOrderByCreatedAt(UUID toId);
 
-    List<MessageCenter> findAllByChatIdAndDeletedFalseAndReadFalse(UUID chatId);
+    List<MessageCenter> findAllByChatIdAndToIdAndDeletedFalseAndReadFalse(UUID chatId,UUID toId);
 
-    List<MessageCenter> findAllByChatIdAndDeletedFalse(UUID chatId);
+    List<MessageCenter> findAllByChatIdAndDeletedFalseOrderByCreatedAt(UUID chatId);
 }

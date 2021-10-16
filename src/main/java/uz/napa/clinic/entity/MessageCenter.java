@@ -21,6 +21,7 @@ public class MessageCenter extends BaseEntity {
     @ManyToOne
     private User from;
 
+    @Column(columnDefinition = "text")
     private String message;
 
     private boolean edit=false;

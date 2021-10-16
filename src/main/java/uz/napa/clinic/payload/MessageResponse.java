@@ -25,6 +25,8 @@ public class MessageResponse {
 
     private boolean edit;
 
+    private boolean read;
+
     private Timestamp createdAt;
 
 
@@ -37,6 +39,7 @@ public class MessageResponse {
         messageResponse.setToId(messageCenter.getTo().getId());
         messageResponse.setMessageId(messageCenter.getId());
         messageResponse.setChatId(messageCenter.getChat().getId());
+        messageResponse.setRead(messageCenter.isRead());
         return messageResponse;
     }
 }

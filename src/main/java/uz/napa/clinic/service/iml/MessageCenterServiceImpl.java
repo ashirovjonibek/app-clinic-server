@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import uz.napa.clinic.entity.Chat;
 import uz.napa.clinic.entity.MessageCenter;
 import uz.napa.clinic.entity.User;
+import uz.napa.clinic.entity.enums.UserStatus;
 import uz.napa.clinic.exception.BadRequestException;
 import uz.napa.clinic.payload.ApiResponse;
 import uz.napa.clinic.payload.MessageHelper;
@@ -37,23 +38,33 @@ public class MessageCenterServiceImpl implements MessageCenterService {
 
 
     @Override
-    public ApiResponse userMessages(UUID fromId, UUID chatId) {
-        List<Chat> chats = chatRepository.findAllByReceiverId(fromId);
+    public ApiResponse userMessages(User from, UUID chatId) {
+        List<Chat> chats =
+                from.getStatus().equals(UserStatus.APPLICANT)?chatRepository.findAllByReceiverId(from.getId()):
+                chatRepository.findByCreatorId(from.getId());
         if (chatId == null) {
             List<UserResponseForMessage> response = new ArrayList<>();
             for (int i = 0; i < chats.size(); i++) {
                 response.add(
-                        UserResponseForMessage.response(chats.get(i).getCreator(),
-                                messageCenterRepository.findAllByChatIdAndDeletedFalseAndReadFalse(chats.get(i).getId()).size(),
-                                chats.get(i).getId()
+                        UserResponseForMessage.response(
+                                from.getStatus().equals(UserStatus.APPLICANT)?
+                                        chats.get(i).getCreator():
+                                        chats.get(i).getReceiver(),
+                                messageCenterRepository.findAllByChatIdAndToIdAndDeletedFalseAndReadFalse(chats.get(i).getId(),
+                                        from.getId()
+                                        ).size(),
+                                chats.get(i).getId(),
+                                !from.getStatus().equals(UserStatus.APPLICANT)?
+                                        chats.get(i).getCreator().getId():
+                                        chats.get(i).getReceiver().getId()
                         ));
             }
             return new ApiResponse("Messages", true, response);
         } else {
-            List<MessageCenter> messageCenterList = messageCenterRepository.findAllByChatIdAndDeletedFalse(chatId);
+            List<MessageCenter> messageCenterList = messageCenterRepository.findAllByChatIdAndDeletedFalseOrderByCreatedAt(chatId);
             for (MessageCenter message:
                  messageCenterList) {
-                if (!message.isRead()){
+                if (!from.getId().equals(message.getFrom().getId())){
                     message.setRead(true);
                     messageCenterRepository.save(message);
                 }

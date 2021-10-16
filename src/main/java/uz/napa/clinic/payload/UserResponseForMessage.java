@@ -22,7 +22,7 @@ public class UserResponseForMessage {
 
     private UUID chatId;
 
-    public static UserResponseForMessage response(User user,int count,UUID chatId){
+    public static UserResponseForMessage response(User user,int count,UUID chatId,UUID id){
         UserResponseForMessage response=new UserResponseForMessage();
         response.setCount(count);
         response.setFullName(user.getFullName());

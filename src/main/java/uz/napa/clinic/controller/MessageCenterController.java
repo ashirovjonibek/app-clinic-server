@@ -24,7 +24,7 @@ public class MessageCenterController {
     public HttpEntity<?> getAll(@CurrentUser CustomUserDetails userDetails,
                                 @RequestParam(defaultValue ="") UUID toId){
         if (userDetails.getUser()!=null){
-            return ResponseEntity.ok(messageCenterService.userMessages(userDetails.getUser().getId(),toId));
+            return ResponseEntity.ok(messageCenterService.userMessages(userDetails.getUser(),toId));
         }else {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not authorize");
         }

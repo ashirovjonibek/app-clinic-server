@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public interface MessageCenterService {
 
-    ApiResponse userMessages(UUID fromId,UUID toId);
+    ApiResponse userMessages(User from,UUID toId);
 
     ApiResponse sendOrEditMessage(MessageHelper message);
 
