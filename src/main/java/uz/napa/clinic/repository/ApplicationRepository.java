@@ -42,9 +42,7 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
     @Query(nativeQuery = true, value = "SELECT * FROM application ORDER BY RANDOM() LIMIT 3")
     List<Application> getTopByRandom();
 
-    @Query(value = "select *from aplication where deadline is not null and deadline between :start and :end",nativeQuery = true)
-    Page<Application> getAllDeadline(Pageable pageable, Timestamp start,Timestamp end);
-
+    Page<Application> findAllBySectionIdAndStatusIsNotAndDeadlineBetweenOrderByCreatedAtDesc(Long id,ApplicationStatus status, Timestamp start,Timestamp end, Pageable pageable);
 
 //    @Query(
 //            value = "select * from application where id=(select application_id from answer where listener_id=:uuid) order by created_at desc",

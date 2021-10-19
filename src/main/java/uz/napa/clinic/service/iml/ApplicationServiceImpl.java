@@ -685,7 +685,13 @@ public class ApplicationServiceImpl implements ApplicationService {
         calendar.setTime(new Date());
         calendar1.setTime(new Date());
         calendar.add(Calendar.DATE, 5);
-        Page<Application> allDeadline = applicationRepository.getAllDeadline(pageable, new Timestamp(calendar1.getTime().getTime()), new Timestamp(calendar.getTime().getTime()));
+        Page<Application> allDeadline = applicationRepository
+                .findAllBySectionIdAndStatusIsNotAndDeadlineBetweenOrderByCreatedAtDesc(
+                section.getId(),
+                ApplicationStatus.COMPLETED,
+                new Timestamp(calendar1.getTime().getTime()),
+                new Timestamp(calendar.getTime().getTime()),pageable
+        );
         List<Document> documents = new ArrayList<>();
         allDeadline.getContent().forEach(application -> {
             documents.add(documentRepository.findByApplicationAndAndDeletedFalse(application));
