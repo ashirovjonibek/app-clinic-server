@@ -39,8 +39,10 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
 
     List<Application> findTop2ByTopIsTrueAndDeletedFalseOrderByCreatedAt();
 
-    @Query(nativeQuery = true, value = "SELECT * FROM application ORDER BY RANDOM() LIMIT 3")
+    @Query(nativeQuery = true, value = "SELECT * FROM application where top is false ORDER BY RANDOM() LIMIT 6")
     List<Application> getTopByRandom();
+
+    List<Application> findAllByTopFalse();
 
     Page<Application> findAllBySectionIdAndStatusIsNotAndDeadlineBetweenOrderByCreatedAtDesc(Long id,ApplicationStatus status, Timestamp start,Timestamp end, Pageable pageable);
 
