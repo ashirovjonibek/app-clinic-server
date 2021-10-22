@@ -1,7 +1,6 @@
 package uz.napa.clinic.service.iml;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import uz.napa.clinic.entity.*;
@@ -291,6 +290,18 @@ public class DocumentServiceImpl implements DocumentService {
             return new ApiResponse("Error!!!",false);
         }
 
+    }
+
+    @Override
+    public ResPageable getAllDocs(User user, Pageable pageable) {
+        Page<Document> all = documentRepository.findAllByStatusIsNot(DocumentStatus.TRASH,pageable);
+        return new ResPageable(
+                all.getContent().stream().map(document -> DocumentResponse.fromEntity(document)).collect(Collectors.toList()),
+                pageable.getPageNumber(),
+                all.getTotalPages(),
+                all.getTotalElements()
+
+        );
     }
 
     public ResPageable getAllApplicationListenerIsNull(int page, int size,User user,String sts) {

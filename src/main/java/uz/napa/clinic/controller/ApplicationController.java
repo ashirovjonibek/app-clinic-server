@@ -249,7 +249,7 @@ public class ApplicationController {
     public ResponseEntity<?> getDeadlineApp(@CurrentUser CustomUserDetails user,
                                             @RequestParam(name = "page", defaultValue = AppConstants.DEFAULT_PAGE) int page,
                                             @RequestParam(name = "size", defaultValue = AppConstants.DEFAULT_SIZE) int size) {
-        if (user.getUser().getStatus().equals(UserStatus.LISTENER)) {
+        if (!user.getUser().getStatus().equals(UserStatus.APPLICANT)) {
             return ResponseEntity.ok(applicationService.getDeadlineApp(user.getUser().getSection(), size, page));
         } else
             return ResponseEntity.ok("Permission denied");

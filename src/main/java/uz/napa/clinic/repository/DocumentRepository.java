@@ -71,4 +71,6 @@ public interface DocumentRepository extends JpaRepository<Document, UUID> {
     List<CustomInfoCount> getDocumentByCheckedBy();
 
     Page<Document> findByCheckedByAndStatusAndApplicationTitleContainingIgnoreCaseAndDeletedFalseAndAnswerIsNullOrderByCreatedAtDesc(User user, DocumentStatus status,String search,Pageable pageable);
+
+    Page<Document> findAllByStatusIsNot(DocumentStatus status, Pageable pageable);
 }

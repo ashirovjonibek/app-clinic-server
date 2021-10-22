@@ -683,8 +683,10 @@ public class ApplicationServiceImpl implements ApplicationService {
         Calendar calendar = Calendar.getInstance();
         Calendar calendar1 = Calendar.getInstance();
         calendar.setTime(new Date());
-        calendar1.setTime(new Date());
+//        calendar1.setTime(new Date());
         calendar.add(Calendar.DATE, 5);
+        calendar1.setTime(removeDate(15));
+        System.out.println(removeDate(15)+calendar.getTime().toString());
         Page<Application> allDeadline = applicationRepository
                 .findAllBySectionIdAndStatusIsNotAndDeadlineBetweenOrderByCreatedAtDesc(
                 section.getId(),
@@ -804,6 +806,15 @@ public class ApplicationServiceImpl implements ApplicationService {
         return new Timestamp(cal.getTime().getTime());
 
     }
+
+    public Date removeDate(int rDays) {
+        long dateOffset = (24*60*60*1000) * rDays;
+        Date myDate = new Date();
+        myDate.setTime(myDate.getTime() - dateOffset);
+        return myDate;
+
+    }
+
 
     public ResPageable searchApplicationForListener(User user,String search,int page,int size){
         Pageable pageable = CommonUtils.getPageable(page, size);

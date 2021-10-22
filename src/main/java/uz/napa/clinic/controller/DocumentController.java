@@ -37,6 +37,8 @@ public class DocumentController {
     private static final String GET_FEEDBACK = "/answer/feedback";
     private static final String GET_BY_STATUS = "/get-by-status";
     private static final String GET_BY_CHECKED_BY_LISTENER = "/get-by-checked-listener";
+    private static final String GET_All_DOC = "/get-all";
+
 
 
     private final DocumentService documentService;
@@ -168,5 +170,14 @@ public class DocumentController {
     @GetMapping(GET_FEEDBACK)
     public ResponseEntity<?> getFeedback(@CurrentUser CustomUserDetails userDetails, Pageable pageable) {
         return ResponseEntity.ok(documentService.getAnswerFeedback(userDetails.getUser(), pageable));
+    }
+
+    @GetMapping(GET_All_DOC)
+    public ResponseEntity<?> getAll(@CurrentUser CustomUserDetails userDetails,
+                                    @RequestParam(name="page",defaultValue = AppConstants.DEFAULT_PAGE) int page,
+                                    @RequestParam(name="size",defaultValue = AppConstants.DEFAULT_SIZE) int size
+
+                                    ) {
+        return ResponseEntity.ok(documentService.getAllDocs(userDetails.getUser(), CommonUtils.getPageable(page,size)));
     }
 }
