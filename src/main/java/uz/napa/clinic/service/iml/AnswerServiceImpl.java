@@ -159,6 +159,7 @@ public class AnswerServiceImpl implements AnswerService {
             if (byAnswer.isPresent()) {
                 Answer answer = findAnswer.get();
                 answer.setStatus(AnswerStatus.COMPLETED);
+                answer.setLiked(true);
                 answerRepository.save(answer);
                 sendEmail(byAnswer.get().getApplication().getCreatedBy().getEmail(),byAnswer.get().getCreatedBy().getFullName());
                 return new ApiResponse("Answer sended to Applicant", true);

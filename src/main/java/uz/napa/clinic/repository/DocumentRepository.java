@@ -59,7 +59,7 @@ public interface DocumentRepository extends JpaRepository<Document, UUID> {
 
     Page<Document> findByCheckedByAndStatusAndDeletedFalseOrderByCreatedAtDesc(User checkedBy, DocumentStatus status, Pageable pageable);
 
-    Page<Document> findByApplicationInAndStatusAndDeletedFalseAndAnswerStatusOrderByCreatedAtDesc(List<Application> application, DocumentStatus status, AnswerStatus answer_status, Pageable pageable);
+    Page<Document> findAllByApplicationCreatedByIdAndStatusAndAnswerStatusAndDeletedFalseOrderByCreatedAtDesc(UUID user, DocumentStatus status, AnswerStatus answer_status, Pageable pageable);
 
     @Query(nativeQuery = true, value = "select u,COUNT(d.status),d.status from document d\n" +
             "left join users u\n" +

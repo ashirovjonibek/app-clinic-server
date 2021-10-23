@@ -187,9 +187,8 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public ResPageable getCheckedApplication(int page, int size, User user) {
         Pageable pageable = CommonUtils.getPageable(page, size);
-        List<Application> applications = applicationRepository.findByCreatedByAndDeletedFalse(user);
-        Page<Document> documents = documentRepository.findByApplicationInAndStatusAndDeletedFalseAndAnswerStatusOrderByCreatedAtDesc(applications, DocumentStatus.COMPLETED, AnswerStatus.COMPLETED, pageable);
-        return new ResPageable(
+        Page<Document> documents = documentRepository.findAllByApplicationCreatedByIdAndStatusAndAnswerStatusAndDeletedFalseOrderByCreatedAtDesc(user.getId(), DocumentStatus.COMPLETED, AnswerStatus.COMPLETED, pageable);
+                            return new ResPageable(
                 documents.getContent().stream().map(DocumentResponse::fromEntity).collect(Collectors.toList()),
                 page,
                 documents.getTotalPages(),
@@ -268,9 +267,9 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public ResPageable getAnswerFeedback(User user, Pageable pageable) {
-        Page<Document> findDocuments = documentRepository.findByCheckedByAndStatusAndDeletedFalseOrderByCreatedAtDesc(user, DocumentStatus.COMPLETED, pageable);
+        Page<Document> findDocuments = documentRepository.findByStatusAndDeletedFalseOrderByCreatedAtDesc(DocumentStatus.COMPLETED, pageable);
         return new ResPageable(
-                findDocuments.getContent().stream().map(DocumentResponse::fromEntity).collect(Collectors.toList()),
+                findDocuments.getContent().stream().map(FeedbackResponse::response).collect(Collectors.toList()),
                 pageable.getPageNumber(),
                 findDocuments.getTotalPages(),
                 findDocuments.getTotalElements()
