@@ -292,8 +292,18 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public ResPageable getAllDocs(User user, Pageable pageable) {
-        Page<Document> all = documentRepository.findAllByStatusIsNot(DocumentStatus.TRASH,pageable);
+    public ResPageable getAllDocs(User user,DocumentStatus status, Pageable pageable) {
+        Page<Document> all;
+        if (status.equals(DocumentStatus.ALL)){
+            all=documentRepository.findAllByStatusIsNotAndDeletedFalse(DocumentStatus.TRASH,pageable);
+        }else if (status.equals(DocumentStatus.INPROCESS)){
+            all=documentRepository.findAllByStatusOrStatusOrStatus(
+                    DocumentStatus.INPROCESS,
+                    DocumentStatus.WAITING,
+                    DocumentStatus.DENIED,
+                    pageable
+            );
+        }else all=documentRepository.findAllByStatus(status,pageable);
         return new ResPageable(
                 all.getContent().stream().map(document -> DocumentResponse.fromEntity(document)).collect(Collectors.toList()),
                 pageable.getPageNumber(),

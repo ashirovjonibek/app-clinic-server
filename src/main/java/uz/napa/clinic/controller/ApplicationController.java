@@ -261,10 +261,10 @@ public class ApplicationController {
             @RequestParam(name = "page", defaultValue = AppConstants.DEFAULT_PAGE) int page,
             @RequestParam(name = "size", defaultValue = AppConstants.DEFAULT_SIZE) int size,
             @RequestParam(name = "search", defaultValue = "") String search,
-            @RequestParam(name = "status") DocumentStatus status,
+            @RequestParam(name = "status",defaultValue = "ALL") DocumentStatus status,
             @RequestParam(name = "filterDate", defaultValue = "") String filterDate
     ) {
-        return ResponseEntity.ok(applicationService.getDelayedApp(user.getUser(), page, size, status, search, filterDate));
+        return ResponseEntity.ok(applicationService.getDelayedApp(user.getUser(), page, size, DocumentStatus.ALL, search, filterDate));
     }
 
     @GetMapping(GET_ONE_DELAYED_APP)

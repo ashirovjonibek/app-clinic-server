@@ -174,10 +174,11 @@ public class DocumentController {
 
     @GetMapping(GET_All_DOC)
     public ResponseEntity<?> getAll(@CurrentUser CustomUserDetails userDetails,
+                                    @RequestParam(name="status",defaultValue = "ALL") DocumentStatus status,
                                     @RequestParam(name="page",defaultValue = AppConstants.DEFAULT_PAGE) int page,
                                     @RequestParam(name="size",defaultValue = AppConstants.DEFAULT_SIZE) int size
 
                                     ) {
-        return ResponseEntity.ok(documentService.getAllDocs(userDetails.getUser(), CommonUtils.getPageable(page,size)));
+        return ResponseEntity.ok(documentService.getAllDocs(userDetails.getUser(),status, CommonUtils.getPageable(page,size)));
     }
 }

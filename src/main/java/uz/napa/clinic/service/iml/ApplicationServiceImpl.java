@@ -718,11 +718,11 @@ public class ApplicationServiceImpl implements ApplicationService {
         document.getApplication().setDeadline(addDays(new Timestamp(new Date().getTime()), request.getDelayDay()));
         delayedApplications.setComment(request.getComment());
         delayedApplications.setDelayDay(request.getDelayDay());
-        delayedApplications.setDocument(document);
         delayedApplications.setSection(document.getSection());
         try {
+            Document save = documentRepository.save(document);
+            delayedApplications.setDocument(save);
             delayedApplicationsRepository.save(delayedApplications);
-            documentRepository.save(document);
             return new ApiResponse("Successfully updated!!!",true);
         }catch (Exception e){
             e.printStackTrace();
@@ -751,7 +751,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 all= delayedApplicationsRepository.findAll(pageable);
             }
             return new ResPageable(
-                    all,
+                    all.getContent().stream().map(applications -> DelayedResponse.response(applications)).collect(Collectors.toList()),
                     page,
                     all.getTotalPages(),
                     all.getTotalElements()
@@ -764,7 +764,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 //            }
             all= delayedApplicationsRepository.findBySection(user.getSection(),pageable);
             return new ResPageable(
-                    all,
+                    all.getContent().stream().map(applications -> DelayedResponse.response(applications)).collect(Collectors.toList()),
                     page,
                     all.getTotalPages(),
                     all.getTotalElements()
