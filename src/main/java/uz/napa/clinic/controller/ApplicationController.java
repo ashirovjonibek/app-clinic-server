@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.UUID;
 
 @RestController
+@CrossOrigin("*")
 @RequestMapping("/api/application")
 public class ApplicationController {
     private static final String CREATE = "/create";
@@ -51,6 +52,7 @@ public class ApplicationController {
     private static final String SET_DEADLINE_DATE = "/set-deadline";
     private static final String GET_DELAYED_APP = "/get-delayed-app";
     private static final String GET_ONE_DELAYED_APP = "/get-delayed-app/{id}";
+    private static final String HOME_STATISTIC = "/home-statistic";
     final
     ApplicationServiceImpl applicationService;
     final
@@ -278,6 +280,11 @@ public class ApplicationController {
             return ResponseEntity.ok("Permission denied");
         }
 
+    }
+
+    @GetMapping(HOME_STATISTIC)
+    public HttpEntity<?> getSts(){
+        return ResponseEntity.ok(applicationService.getSts());
     }
 //
 //    // statistikani yil  boyicha olish

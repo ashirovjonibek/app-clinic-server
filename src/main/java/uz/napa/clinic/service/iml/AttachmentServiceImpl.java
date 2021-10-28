@@ -2,10 +2,7 @@ package uz.napa.clinic.service.iml;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileUrlResource;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
+import org.springframework.core.io.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
@@ -228,5 +225,19 @@ public class AttachmentServiceImpl implements AttachmentService {
         attachment.setDeleted(true);
         Attachment save = attachmentRepository.save(attachment);
         return new ApiResponse(save.isDeleted() ? "File deleted!!!" : "Error for deleted!!!", save.isDeleted());
+    }
+
+    public HttpEntity<?> getApplicantDoc() {
+//        Resource resource = new ClassPathResource("/file/file.docx");
+//
+//        File file = new File(String.format("%s/%s", uploadFolder, attachment.getUploadPath()));
+//
+//        byte[] bytes = Files.readAllBytes(file.toPath());
+//        return ResponseEntity.ok().contentType(MediaType.parseMediaType(attachment.getContentType()))
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=file.docx")
+//                .contentLength(attachment.getSize())
+//                .body(bytes);
+
+        return null;
     }
 }

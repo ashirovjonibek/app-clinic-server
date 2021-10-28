@@ -8,8 +8,8 @@ import uz.napa.clinic.payload.WordRequest;
 import uz.napa.clinic.payload.ApiResponse;
 import uz.napa.clinic.service.iml.WordsServiceImpl;
 import uz.napa.clinic.utils.AppConstants;
-
 @RestController
+@CrossOrigin("*")
 @RequestMapping("/api/words")
 public class WordsController {
 

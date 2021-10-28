@@ -16,6 +16,7 @@ import uz.napa.clinic.payload.ApiResponse;
 import uz.napa.clinic.repository.*;
 import uz.napa.clinic.service.AnswerService;
 import uz.napa.clinic.service.iml.helper.HtmlConverter;
+import uz.napa.clinic.service.iml.helper.SmsSender;
 
 import javax.mail.internet.MimeMessage;
 import java.util.List;
@@ -161,7 +162,7 @@ public class AnswerServiceImpl implements AnswerService {
                 answer.setStatus(AnswerStatus.COMPLETED);
                 answer.setLiked(true);
                 answerRepository.save(answer);
-                sendEmail(byAnswer.get().getApplication().getCreatedBy().getEmail(),byAnswer.get().getCreatedBy().getFullName());
+                SmsSender.sendSms(byAnswer.get().getApplication().getCreatedBy().getPhoneNumber(),"Xurmatli mijos sizning burojatingiz ko'rib chiqildi. Hisobingiz orqali javobni ko'rishingiz mumkin!!!");
                 return new ApiResponse("Answer sended to Applicant", true);
             } else {
                 throw new BadRequestException("Document not found by Answer ID: " + id);

@@ -7,7 +7,9 @@ import org.springframework.web.bind.annotation.*;
 import uz.napa.clinic.payload.PositionRequest;
 import uz.napa.clinic.service.iml.PositionServiceImpl;
 
+
 @RestController
+@CrossOrigin("*")
 @RequestMapping("/api/position")
 public class PositionController {
     private static final String CREATE = "/create";

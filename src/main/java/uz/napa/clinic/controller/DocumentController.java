@@ -17,7 +17,9 @@ import uz.napa.clinic.utils.CommonUtils;
 
 import java.util.UUID;
 
+
 @RestController
+@CrossOrigin("*")
 @RequestMapping("/api/document")
 public class DocumentController {
     private static final String SET_LISTENER = "/set/listener";

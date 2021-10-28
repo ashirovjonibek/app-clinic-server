@@ -149,4 +149,10 @@ public class MessageCenterServiceImpl implements MessageCenterService {
             return chatRepository.save(new Chat(from, user)).getId();
 
     }
+
+    @Override
+    public List<MessageResponse> findAll() {
+
+        return messageCenterRepository.findAll().stream().map(messageCenter -> MessageResponse.response(messageCenter)).collect(Collectors.toList());
+    }
 }

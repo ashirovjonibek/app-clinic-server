@@ -1,8 +1,8 @@
 package uz.napa.clinic.controller;
 
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import uz.napa.clinic.payload.ApiResponse;
@@ -12,18 +12,22 @@ import uz.napa.clinic.security.CustomUserDetails;
 import uz.napa.clinic.service.iml.AttachmentServiceImpl;
 import uz.napa.clinic.utils.AppConstants;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.file.Files;
 import java.util.UUID;
 
 @RestController
+@CrossOrigin("*")
 @RequestMapping("/api/attach")
 public class AttachmentController {
     private static final String CREATE = "/upload";
     private static final String GET_BY_ID = "/{id}";
     private static final String GET_BY_ID_VIDEO = "/video/{id}";
     private static final String GET_BY_ID_AUDIO = "/audio/{id}";
-    private static final String NORMATIVE_LEGAL_BASE="/normative-legal-base";
+    private static final String NORMATIVE_LEGAL_BASE = "/normative-legal-base";
+    private static final String DOC_FOR_APPLICANT = "/doc-for-applicant";
     final
     AttachmentServiceImpl attachmentService;
     final
@@ -37,7 +41,7 @@ public class AttachmentController {
     @PostMapping(CREATE)
     public HttpEntity<?> uploadFile(@CurrentUser CustomUserDetails userDetails, MultipartHttpServletRequest file) throws IOException {
         System.out.println(userDetails.getUser().getFullName());
-        ApiResponse response = attachmentService.uploadFile(file,userDetails.getUser());
+        ApiResponse response = attachmentService.uploadFile(file, userDetails.getUser());
         return ResponseEntity.status(response.isSuccess() ? HttpStatus.CREATED : HttpStatus.CONFLICT).body(response);
     }
 
@@ -45,6 +49,16 @@ public class AttachmentController {
     @GetMapping(GET_BY_ID)
     public HttpEntity<?> getFileById(@PathVariable UUID id) throws IOException {
         return attachmentService.getFileById(id);
+    }
+
+    @GetMapping(DOC_FOR_APPLICANT)
+    public HttpEntity<?> getDoc() throws IOException {
+        Resource resource = new ClassPathResource("/file/file.docx");
+        File file = resource.getFile();
+        byte[] bytes = Files.readAllBytes(file.toPath());
+        return ResponseEntity.ok().contentType(MediaType.parseMediaType("application/word"))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=file.docx")
+                .body(bytes);
     }
 
     @GetMapping(GET_BY_ID_VIDEO)
@@ -58,13 +72,13 @@ public class AttachmentController {
     }
 
     @GetMapping(NORMATIVE_LEGAL_BASE)
-    public HttpEntity<?> getNormativeLegalBase(@RequestParam(name = "page",defaultValue = AppConstants.DEFAULT_PAGE) int page,
-                                               @RequestParam(name = "size",defaultValue = AppConstants.DEFAULT_SIZE) int size){
-        return ResponseEntity.ok(attachmentService.getNormativeLegalBase(page,size));
+    public HttpEntity<?> getNormativeLegalBase(@RequestParam(name = "page", defaultValue = AppConstants.DEFAULT_PAGE) int page,
+                                               @RequestParam(name = "size", defaultValue = AppConstants.DEFAULT_SIZE) int size) {
+        return ResponseEntity.ok(attachmentService.getNormativeLegalBase(page, size));
     }
 
     @DeleteMapping
-    public HttpEntity<?> deleteFile(@RequestParam UUID id){
+    public HttpEntity<?> deleteFile(@RequestParam UUID id) {
 
         return ResponseEntity.ok(
                 attachmentService.delete(id)

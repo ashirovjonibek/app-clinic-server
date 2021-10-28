@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import uz.napa.clinic.entity.*;
 import uz.napa.clinic.entity.enums.UserStatus;
 import uz.napa.clinic.repository.*;
+import uz.napa.clinic.service.iml.helper.SmsSender;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -90,11 +91,11 @@ public class DataLoader implements CommandLineRunner {
                             districtRepository.getOne(196L),
                             "Toshken sh. Olmazor 2",
                             sectionRepository.getOne(1L),
-                            "+998919687077",
+                            "admin",
                             "islomxujanazarov0501@gmail.com",
                             "erkak",
                             UserStatus.ADMIN,
-                            passwordEncoder.encode("1"),
+                            passwordEncoder.encode("admin"),
                             roleRepository.findAll()
                     ));
 

@@ -15,6 +15,7 @@ import uz.napa.clinic.service.iml.AnswerServiceImpl;
 import java.util.UUID;
 
 @RestController
+@CrossOrigin("*")
 @RequestMapping("/api/answer")
 public class AnswerController {
     private static final String CREATE = "/create";

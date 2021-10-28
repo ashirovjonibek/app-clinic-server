@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 @RestController
+@CrossOrigin("*")
 @RequestMapping("/api/auth")
 public class AuthController {
     private static final String REGISTER_LISTENER = "/createListener";
@@ -140,7 +141,7 @@ public class AuthController {
     @GetMapping(APPLICANT_LIST)
     public HttpEntity<?> getApplicantList(@RequestParam(name = "size",defaultValue = AppConstants.DEFAULT_SIZE) int size,
                                           @RequestParam(name = "page",defaultValue = AppConstants.DEFAULT_PAGE) int page
-                                          ) {
+    ) {
         return ResponseEntity.ok(userService.applicantList(size,page));
     }
 

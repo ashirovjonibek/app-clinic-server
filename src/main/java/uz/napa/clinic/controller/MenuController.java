@@ -14,7 +14,9 @@ import uz.napa.clinic.service.iml.MenuServiceImpl;
 
 import java.util.List;
 
+
 @RestController
+@CrossOrigin("*")
 @RequestMapping("/api/menu")
 public class MenuController {
     private static final String CREATE = "/create";

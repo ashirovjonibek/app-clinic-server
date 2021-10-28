@@ -828,4 +828,25 @@ public class ApplicationServiceImpl implements ApplicationService {
                 uncheckedDocuments.getTotalElements()
         );
     }
+
+    public ApiResponse getSts() {
+
+        int size = applicationRepository.findAll().size();
+        Page<User> users = userRepository.findByStatusAndDeletedFalse(UserStatus.APPLICANT, CommonUtils.getPageable(0, 10));
+        Long applicants=users.getTotalElements();
+        int complete = applicationRepository.findAllByStatusAndDeletedFalse(ApplicationStatus.COMPLETED).size();
+        List<ApplicationStatus> statuses=new ArrayList<>();
+//        statuses.add(ApplicationStatus.INPROCESS);
+//        statuses.add(ApplicationStatus.DENIED);
+        int inp = applicationRepository.findAllByStatusAndDeletedFalse(ApplicationStatus.DENIED).size()+applicationRepository.findAllByStatusAndDeletedFalse(ApplicationStatus.INPROCESS).size();
+        Map<String, Long> response=new HashMap<>();
+
+        response.put("all", (long) size);
+        response.put("inprocces", (long) inp);
+        response.put("complete", (long) complete);
+        response.put("applicants",applicants);
+
+
+        return new ApiResponse("sts",true,response);
+    }
 }

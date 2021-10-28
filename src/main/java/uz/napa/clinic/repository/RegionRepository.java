@@ -4,13 +4,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import uz.napa.clinic.entity.Region;
 import uz.napa.clinic.projection.CustomInfoRegion;
 import uz.napa.clinic.projection.CustomRegion;
 
 import javax.validation.constraints.Negative;
 import java.util.List;
-
+@CrossOrigin
 @RepositoryRestResource(path = "region", excerptProjection = CustomRegion.class)
 public interface RegionRepository extends JpaRepository<Region, Long> {
 

@@ -21,6 +21,7 @@ import uz.napa.clinic.security.CustomUserDetails;
 import uz.napa.clinic.security.JwtTokenProvider;
 import uz.napa.clinic.service.UserService;
 import uz.napa.clinic.service.iml.helper.HtmlConverter;
+import uz.napa.clinic.service.iml.helper.SmsSender;
 import uz.napa.clinic.utils.CommonUtils;
 
 import javax.mail.internet.MimeMessage;
@@ -118,7 +119,6 @@ public class UserServiceImpl implements UserService {
             if (validBirthDate(request.getBirthDate())) {
                 User user = new User();
                 user.setFullName(request.getFullName());
-//                user.setNation(entityManager.getReference(Nation.class, request.getNationId()));
                 user.setGender(request.getGender());
                 user.setBirthDate(request.getBirthDate());
                 user.setDistrict(entityManager.getReference(District.class, request.getDistrictId()));
@@ -336,8 +336,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ApiResponse resetPassword(HttpServletRequest request, String email) {
-        Optional<User> user = userRepository.findByEmail(email);
+    public ApiResponse resetPassword(HttpServletRequest request, String phone) {
+        String p;
+        if (!phone.startsWith("+")) p=String.format("%s%s","+",phone);
+        else p=phone;
+        Optional<User> user = userRepository.findByPhoneNumber(p);
         Long expireTime=new Date().getTime()+300000;
         if (user.isPresent()) {
             String token = UUID.randomUUID().toString();
@@ -345,12 +348,11 @@ public class UserServiceImpl implements UserService {
             resetToken.setToken(token);
             resetToken.setUser(user.get());
             resetToken.setExpiryDate(new Date(expireTime));
-//            mailSender.send(constructResetTokenEmail(getAppUrl(request), token, user.get()));
-            sendEmail(user.get().getEmail(),user.get().getFullName(), token);
+            SmsSender.sendSms(phone,token+" bu sizning mahfiy parolingiz. Uni hech kimga bermang!!!");
             passwordResetTokenRepository.save(resetToken);
-            return new ApiResponse("We send link to " + email, true);
+            return new ApiResponse("We send code to " + phone, true);
         } else {
-            throw new BadRequestException("User not found with email :" + email);
+            throw new BadRequestException("User not found with email :" + phone);
         }
     }
 

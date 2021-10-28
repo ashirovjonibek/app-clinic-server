@@ -6,7 +6,9 @@ import org.springframework.web.bind.annotation.*;
 import uz.napa.clinic.payload.SectionRequest;
 import uz.napa.clinic.service.SectionService;
 
+
 @RestController
+@CrossOrigin("*")
 @RequestMapping("/api/section")
 
 public class SectionController {
