@@ -337,22 +337,25 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ApiResponse resetPassword(HttpServletRequest request, String phone) {
-        String p;
-        if (!phone.startsWith("+")) p=String.format("%s%s","+",phone);
-        else p=phone;
-        Optional<User> user = userRepository.findByPhoneNumber(p);
+//        String p;
+//        if (!phone.startsWith("+")) p=String.format("%s%s","+",phone);
+//        else p=phone;
+        Optional<User> user = userRepository.findByPhoneNumber(phone);
         Long expireTime=new Date().getTime()+300000;
         if (user.isPresent()) {
             String token = UUID.randomUUID().toString();
             PasswordResetToken resetToken = new PasswordResetToken();
             resetToken.setToken(token);
+            user.get().setPassword(passwordEncoder.encode(token.substring(0,token.indexOf("-"))));
             resetToken.setUser(user.get());
             resetToken.setExpiryDate(new Date(expireTime));
-            SmsSender.sendSms(phone,token+" bu sizning mahfiy parolingiz. Uni hech kimga bermang!!!");
+            SmsSender.sendSms(phone.substring(1),token.substring(0,token.indexOf("-"))+
+                    " bu accountga kirish uchun parolingiz. Acountga kirgach parolni yangilashingizni so'raymiz!");
+            userRepository.save(user.get());
             passwordResetTokenRepository.save(resetToken);
             return new ApiResponse("We send code to " + phone, true);
         } else {
-            throw new BadRequestException("User not found with email :" + phone);
+            throw new BadRequestException("User not found with number :" + phone);
         }
     }
 

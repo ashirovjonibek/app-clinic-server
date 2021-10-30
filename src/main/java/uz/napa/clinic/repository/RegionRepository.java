@@ -11,7 +11,7 @@ import uz.napa.clinic.projection.CustomRegion;
 
 import javax.validation.constraints.Negative;
 import java.util.List;
-@CrossOrigin
+@CrossOrigin("*")
 @RepositoryRestResource(path = "region", excerptProjection = CustomRegion.class)
 public interface RegionRepository extends JpaRepository<Region, Long> {
 

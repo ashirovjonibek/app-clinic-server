@@ -9,4 +9,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Commit {
     private String comment;
+    private String to;
 }

@@ -110,7 +110,7 @@ public class AttachmentServiceImpl implements AttachmentService {
         return ResponseEntity.ok().contentType(MediaType.valueOf(attachment.getContentType()))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + attachment.getName() + "\"")
                 .contentLength(attachment.getSize())
-                .body(new FileUrlResource(attachment.getUploadPath()));
+                .body(new FileUrlResource(String.format("%s/%s", uploadFolder, attachment.getUploadPath())));
     }
 
     public HttpEntity<?> getAudioFile(UUID id) throws MalformedURLException {
@@ -121,7 +121,7 @@ public class AttachmentServiceImpl implements AttachmentService {
         return ResponseEntity.ok().contentType(MediaType.valueOf(attachment.getContentType().replace("*", "ogg")))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + attachment.getName() + "\"")
                 .contentLength(attachment.getSize())
-                .body(new FileUrlResource(attachment.getUploadPath()));
+                .body(new FileUrlResource(String.format("%s/%s", uploadFolder, attachment.getUploadPath())));
     }
 
     @Override

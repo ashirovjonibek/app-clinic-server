@@ -229,8 +229,8 @@ public class AuthController {
 
     @PostMapping(RESET_PASSWORD)
     public ResponseEntity<?> resetPassword(HttpServletRequest request,
-                                           @RequestParam("email") String userEmail) {
-        return ResponseEntity.ok(userService.resetPassword(request, userEmail));
+                                           @RequestParam("phone") String phone) {
+        return ResponseEntity.ok(userService.resetPassword(request, phone));
     }
 
     @PostMapping(SAVE_PASSWORD)

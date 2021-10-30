@@ -317,7 +317,12 @@ public class ApplicationServiceImpl implements ApplicationService {
 
             Document findDocument = documentRepository.findByApplicationAndDeletedFalseAndStatus(byId.get(), DocumentStatus.CREATED);
             if (findDocument != null) {
-                findDocument.setStatus(DocumentStatus.FORWARD_TO_SUPER_MODERATOR);
+                if (message.getTo().equals("boss")){
+                    findDocument.setStatus(DocumentStatus.FORWARD_TO_MODERATOR);
+                }
+                else {
+                    findDocument.setStatus(DocumentStatus.FORWARD_TO_SUPER_MODERATOR);
+                }
                 findDocument.setForwardMessage(message.getComment());
                 documentRepository.save(findDocument);
                 return new ApiResponse("Application forward to Moderator", true);
