@@ -84,18 +84,18 @@ public class DataLoader implements CommandLineRunner {
             roleRepository.saveAll(Arrays.asList(admin, user, moderator, superModerator, listener,superModeratorAndModerator));
             userRepository.save(
                     new User(
-                            "Umid Abdusattorov",
+                            "Clinic Admin",
                             new Date(99, 10, 2),
                             positionRepository.getOne(1L),
                             1,
                             districtRepository.getOne(196L),
                             "Toshken sh. Olmazor 2",
                             sectionRepository.getOne(1L),
-                            "admin",
+                            "+998919687077",
                             "islomxujanazarov0501@gmail.com",
                             "erkak",
                             UserStatus.ADMIN,
-                            passwordEncoder.encode("admin"),
+                            passwordEncoder.encode("admin123"),
                             roleRepository.findAll()
                     ));
 
