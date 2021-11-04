@@ -11,11 +11,11 @@ import uz.napa.clinic.projection.CustomDistrict;
 
 import java.util.List;
 
-@CrossOrigin("*")
-@Repository
-@RepositoryRestResource(path = "district", excerptProjection = CustomDistrict.class)
+//@CrossOrigin("*")
+//@Repository
+//@RepositoryRestResource(path = "district", excerptProjection = CustomDistrict.class)
 public interface DistrictRepository extends JpaRepository<District, Long> {
-    @CrossOrigin("*")
-    @RestResource(path = "/filterByRegion")
+//    @CrossOrigin("*")
+//    @RestResource(path = "/filterByRegion")
     List<District> findAllByRegionId(@Param("id") Long id);
 }

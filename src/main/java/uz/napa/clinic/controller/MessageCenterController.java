@@ -31,9 +31,9 @@ import java.util.UUID;
 public class MessageCenterController {
     @Autowired
     MessageCenterService messageCenterService;
-
-    @Autowired
-    private SimpMessageSendingOperations messagingTemplate;
+        //
+        //    @Autowired
+        //    private SimpMessageSendingOperations messagingTemplate;
 
     @GetMapping
     public HttpEntity<?> getAll(@CurrentUser CustomUserDetails userDetails,
@@ -85,11 +85,11 @@ public class MessageCenterController {
         }
     }
 
-    @MessageMapping("/chat/{roomId}")
-    public void send(@DestinationVariable String roomId, @Payload MessageHelper message,
-                     SimpMessageHeaderAccessor headerAccessor) throws Exception {
-        String time = new SimpleDateFormat("HH:mm").format(new Date());
-        messagingTemplate.convertAndSend(format("/channel/%s", roomId),new ApiResponse("msg",true,messageCenterService.findAll()));
-    }
+//    @MessageMapping("/chat/{roomId}")
+//    public void send(@DestinationVariable String roomId, @Payload MessageHelper message,
+//                     SimpMessageHeaderAccessor headerAccessor) throws Exception {
+//        String time = new SimpleDateFormat("HH:mm").format(new Date());
+//        messagingTemplate.convertAndSend(format("/channel/%s", roomId),new ApiResponse("msg",true,messageCenterService.findAll()));
+//    }
 
 }

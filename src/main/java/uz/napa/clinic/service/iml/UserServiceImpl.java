@@ -6,6 +6,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -64,6 +65,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public JwtResponse login(LoginRequest loginRequest) {
+        if (!loginRequest.getPhoneNumber().startsWith("+998"))
+            {
+                User user=userRepository.findByEmail(loginRequest.getPhoneNumber()).get();
+            if (user!=null)
+            loginRequest.setPhoneNumber(user.getPhoneNumber());
+            else
+                throw new BadCredentialsException("User not found with email");
+            }
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getPhoneNumber(), loginRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         User user = ((CustomUserDetails) authentication.getPrincipal()).getUser();
@@ -125,7 +134,7 @@ public class UserServiceImpl implements UserService {
                 user.setAddress(request.getAddress());
                 user.setEmail(request.getEmail());
                 user.setPhoneNumber(request.getPhoneNumber());
-                user.setSocialStatus(entityManager.getReference(SocialStatus.class, request.getSocialStatusId()));
+                if (request.getSocialStatusId()!=null)user.setSocialStatus(entityManager.getReference(SocialStatus.class, request.getSocialStatusId()));
                 user.setPassword(passwordEncoder.encode(request.getPassword()));
                 user.setStatus(UserStatus.APPLICANT);
                 user.setRoles(Collections.singletonList(roleRepository.findByName("USER")));

@@ -77,7 +77,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .antMatchers(
                         "/api/region/**",
-                        "/api/district/**",
                         "/api/nation/**",
                         "/api/socialStatus/**",
                         "/api/position/**",
@@ -91,8 +90,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                         "/api/auth/createListener",
                         "/api/auth/createApplicant",
                         "/api/attach/**",
-                        "/api/words",
-                        "/ws"
+                        "/api/words"
                 )
                 .permitAll()
                 .antMatchers("/api/**")
