@@ -38,5 +38,11 @@ public class RegionController {
         return ResponseEntity.ok(socialStatusRepository.findAll());
     }
 
+    @GetMapping("/{disId}")
+    public HttpEntity<?> getReg(@PathVariable Long disId){
+
+        return ResponseEntity.ok(districtRepository.findById(disId).get().getRegion());
+    }
+
 
 }

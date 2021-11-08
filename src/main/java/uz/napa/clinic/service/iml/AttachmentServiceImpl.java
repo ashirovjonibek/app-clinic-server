@@ -104,10 +104,11 @@ public class AttachmentServiceImpl implements AttachmentService {
 
     public HttpEntity<?> getVideoFile(UUID id) throws MalformedURLException {
         Attachment attachment = attachmentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("getAttachment"));
-        AttachmentContent attachmentContent = attachmentContentRepository.findByAttachment(attachment);
+//        AttachmentContent attachmentContent = attachmentContentRepository.findByAttachment(attachment);
 
+        String contentType=attachment.getContentType().substring(0,attachment.getContentType().indexOf(";"));
 
-        return ResponseEntity.ok().contentType(MediaType.valueOf(attachment.getContentType()))
+        return ResponseEntity.ok().contentType(MediaType.valueOf(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + attachment.getName() + "\"")
                 .contentLength(attachment.getSize())
                 .body(new FileUrlResource(String.format("%s/%s", uploadFolder, attachment.getUploadPath())));
