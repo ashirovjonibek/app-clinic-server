@@ -90,7 +90,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                         "/api/auth/createListener",
                         "/api/auth/createApplicant",
                         "/api/attach/**",
-                        "/api/words"
+                        "/api/words",
+                        "/api/message/aa"
                 )
                 .permitAll()
                 .antMatchers("/api/**")

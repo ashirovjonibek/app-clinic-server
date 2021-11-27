@@ -23,6 +23,12 @@ public class MessageResponse {
 
     private UUID chatId;
 
+    private String fileUrl;
+
+    private String fileName;
+
+    private Long fileSize;
+
     private boolean edit;
 
     private boolean read;
@@ -37,9 +43,14 @@ public class MessageResponse {
         messageResponse.setFromId(messageCenter.getCreatedBy().getId());
         messageResponse.setMessage(messageCenter.getMessage());
         messageResponse.setToId(messageCenter.getTo().getId());
-        messageResponse.setMessageId(messageCenter.getId());
+        if (messageCenter.getId()!=null)messageResponse.setMessageId(messageCenter.getId());
         messageResponse.setChatId(messageCenter.getChat().getId());
         messageResponse.setRead(messageCenter.isRead());
+        if (messageCenter.getAttachment()!=null){
+            messageResponse.setFileUrl(messageCenter.getAttachment().getId()!=null?"/attach/"+messageCenter.getAttachment().getId():"");
+            messageResponse.setFileName(messageCenter.getAttachment().getName());
+            messageResponse.setFileSize(messageCenter.getAttachment().getSize());
+        }
         return messageResponse;
     }
 }

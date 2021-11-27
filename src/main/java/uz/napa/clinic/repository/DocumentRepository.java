@@ -20,9 +20,19 @@ import java.util.UUID;
 @Repository
 public interface DocumentRepository extends JpaRepository<Document, UUID> {
 
+    List<Document> findByCreatedByIdAndStatusAndDeletedFalse(UUID id,DocumentStatus status);
+
+    List<Document> findByStatusAndSectionIdAndDeletedFalse(DocumentStatus status,Long id);
+
     List<Document> findByStatusAndDeletedFalse(DocumentStatus status);
 
-    List<Document> findByStatusAndAnswerIsNullAndDeletedFalse(DocumentStatus status);
+    List<Document> findByCheckedByIdAndStatusAndDeletedFalse(UUID id,DocumentStatus status);
+
+    List<Document> findByCheckedByIdAndStatusAndAnswerIsNullAndDeletedFalse(UUID id,DocumentStatus status);
+
+    List<Document> findByCheckedByIdAndAnswerStatusAndDeletedFalse(UUID id,AnswerStatus status);
+
+    List<Document> findBySectionIdAndAnswerStatusAndDeletedFalse(Long id,AnswerStatus status);
 
     Page<Document> findByStatusAndAnswerIsNullAndDeletedFalseOrderByCreatedAtDesc(DocumentStatus status, Pageable pageable);
 

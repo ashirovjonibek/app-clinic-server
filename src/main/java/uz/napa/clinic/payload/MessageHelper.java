@@ -3,7 +3,9 @@ package uz.napa.clinic.payload;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import uz.napa.clinic.entity.Attachment;
 
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -18,6 +20,8 @@ public class MessageHelper {
     private UUID toId;
 
     private String message;
+
+    private Attachment  attachment;
 
     private UUID chatId;
 }

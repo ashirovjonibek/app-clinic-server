@@ -5,9 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import uz.napa.clinic.entity.template.BaseEntity;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -23,6 +22,9 @@ public class MessageCenter extends BaseEntity {
 
     @Column(columnDefinition = "text")
     private String message;
+
+    @OneToOne
+    private Attachment attachment;
 
     private boolean edit=false;
 
