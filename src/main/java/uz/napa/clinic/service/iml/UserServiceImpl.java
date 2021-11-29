@@ -22,7 +22,6 @@ import uz.napa.clinic.security.CustomUserDetails;
 import uz.napa.clinic.security.JwtTokenProvider;
 import uz.napa.clinic.service.UserService;
 import uz.napa.clinic.service.iml.helper.HtmlConverter;
-import uz.napa.clinic.service.iml.helper.SmsSender;
 import uz.napa.clinic.utils.CommonUtils;
 
 import javax.mail.internet.MimeMessage;
@@ -46,9 +45,10 @@ public class UserServiceImpl implements UserService {
     private final DistrictRepository districtRepository;
     private final SocialStatusRepository socialStatusRepository;
     private final AttachmentRepository attachmentRepository;
+    private final EskizServise eskizServise;
 
 
-    public UserServiceImpl(UserRepository userRepository, EntityManager entityManager, PasswordEncoder passwordEncoder, RoleRepository roleRepository, AuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider, AnswerRepository answerRepository, JavaMailSender mailSender, PasswordResetTokenRepository passwordResetTokenRepository, DistrictRepository districtRepository, PositionRepository positionRepository, SocialStatusRepository socialStatusRepository, AttachmentRepository attachmentRepository) {
+    public UserServiceImpl(UserRepository userRepository, EntityManager entityManager, PasswordEncoder passwordEncoder, RoleRepository roleRepository, AuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider, AnswerRepository answerRepository, JavaMailSender mailSender, PasswordResetTokenRepository passwordResetTokenRepository, DistrictRepository districtRepository, PositionRepository positionRepository, SocialStatusRepository socialStatusRepository, AttachmentRepository attachmentRepository, EskizServise eskizServise) {
         this.userRepository = userRepository;
         this.entityManager = entityManager;
         this.passwordEncoder = passwordEncoder;
@@ -61,6 +61,7 @@ public class UserServiceImpl implements UserService {
         this.districtRepository = districtRepository;
         this.socialStatusRepository = socialStatusRepository;
         this.attachmentRepository = attachmentRepository;
+        this.eskizServise = eskizServise;
     }
 
     @Override
@@ -358,11 +359,11 @@ public class UserServiceImpl implements UserService {
             user.get().setPassword(passwordEncoder.encode(token.substring(0,token.indexOf("-"))));
             resetToken.setUser(user.get());
             resetToken.setExpiryDate(new Date(expireTime));
-            SmsSender.sendSms(phone.substring(1),token.substring(0,token.indexOf("-"))+
-                    " bu accountga kirish uchun parolingiz. Acountga kirgach parolni yangilashingizni so'raymiz!");
+            eskizServise.sendSms(token.substring(0,token.indexOf("-"))+
+                    " bu accountga kirish uchun parolingiz. Acountga kirgach parolni yangilashingizni so'raymiz!",phone);
             userRepository.save(user.get());
             passwordResetTokenRepository.save(resetToken);
-            return new ApiResponse("We send code to " + phone, true);
+            return new ApiResponse("We send password to " + phone, true);
         } else {
             throw new BadRequestException("User not found with number :" + phone);
         }

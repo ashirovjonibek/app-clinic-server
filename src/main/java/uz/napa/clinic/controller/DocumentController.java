@@ -163,7 +163,7 @@ public class DocumentController {
         return ResponseEntity.ok(documentService.getAlllAcceptedDocument(pageable));
     }
 
-    @PreAuthorize("hasAnyAuthority('SUPER_MODERATOR','MODERATOR','SUPER_MODERATOR_AND_MODERATOR')")
+    @PreAuthorize("hasAnyAuthority('SUPER_MODERATOR','MODERATOR','SUPER_MODERATOR_AND_MODERATOR','LISTENER')")
     @GetMapping(GET_ACCEPTED_APPLICATION_BY_SECTION)
     public ResponseEntity<?> getAllAcceptedApplicationBySection(@CurrentUser CustomUserDetails userDetails, Pageable pageable) {
         return ResponseEntity.ok(documentService.getAlllAcceptedApplication(userDetails.getUser(), pageable));
@@ -176,11 +176,12 @@ public class DocumentController {
 
     @GetMapping(GET_All_DOC)
     public ResponseEntity<?> getAll(@CurrentUser CustomUserDetails userDetails,
+                                    @RequestParam(name = "search",defaultValue = "") String search,
                                     @RequestParam(name="status",defaultValue = "ALL") DocumentStatus status,
                                     @RequestParam(name="page",defaultValue = AppConstants.DEFAULT_PAGE) int page,
                                     @RequestParam(name="size",defaultValue = AppConstants.DEFAULT_SIZE) int size
 
                                     ) {
-        return ResponseEntity.ok(documentService.getAllDocs(userDetails.getUser(),status, CommonUtils.getPageable(page,size)));
+        return ResponseEntity.ok(documentService.getAllDocs(search,userDetails.getUser(),status, CommonUtils.getPageable(page,size)));
     }
 }

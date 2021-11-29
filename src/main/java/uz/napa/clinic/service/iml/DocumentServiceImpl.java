@@ -113,7 +113,7 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public ResPageable getBossAnswers(User user, String search, int page, int size) {
         Pageable pageable = CommonUtils.getPageable(page, size);
-        Page<Document> allByAnswerIn = documentRepository.findByStatusAndDeletedFalseAndCheckedBySectionAndApplicationTitleContainingIgnoreCaseOrderByCreatedAtDesc(DocumentStatus.WAITING, user.getSection(),search, pageable);
+        Page<Document> allByAnswerIn = documentRepository.findByStatusAndDeletedFalseAndCheckedBySectionAndApplicationTitleContainingIgnoreCaseOrderByCreatedAtDesc(DocumentStatus.WAITING, user.getSection(), search, pageable);
         return new ResPageable(
                 allByAnswerIn.getContent().stream().map(DocumentResponse::fromEntity).collect(Collectors.toList()),
                 page,
@@ -174,7 +174,7 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public ResPageable deniedAnswerDocument(User user,Pageable pageable) {
+    public ResPageable deniedAnswerDocument(User user, Pageable pageable) {
         Page<Document> documents = documentRepository.findByCheckedByAndStatusAndDeletedFalseAndAnswerIsNotNullOrderByCreatedAtDesc(user, DocumentStatus.DENIED, pageable);
         return new ResPageable(
                 documents.stream().map(DocumentResponse::fromEntity).collect(Collectors.toList()),
@@ -188,7 +188,7 @@ public class DocumentServiceImpl implements DocumentService {
     public ResPageable getCheckedApplication(int page, int size, User user) {
         Pageable pageable = CommonUtils.getPageable(page, size);
         Page<Document> documents = documentRepository.findAllByApplicationCreatedByIdAndStatusAndAnswerStatusAndDeletedFalseOrderByCreatedAtDesc(user.getId(), DocumentStatus.COMPLETED, AnswerStatus.COMPLETED, pageable);
-                            return new ResPageable(
+        return new ResPageable(
                 documents.getContent().stream().map(DocumentResponse::fromEntity).collect(Collectors.toList()),
                 page,
                 documents.getTotalPages(),
@@ -201,15 +201,16 @@ public class DocumentServiceImpl implements DocumentService {
         return documentRepository.findAll();
     }
 
-    public ResPageable findAllByPageable(int page, int size,DocumentStatus status,User user) {
+    public ResPageable findAllByPageable(int page, int size, DocumentStatus status, User user) {
         Pageable pageable = CommonUtils.getPageable(page, size);
-        Page<Document> documentPage=null;
+        Page<Document> documentPage = null;
 
-        if (status.equals(DocumentStatus.ALL)){
-            documentPage=documentRepository.findAll(pageable);
-        }else {
-            if (status.equals(DocumentStatus.FORWARD_TO_MODERATOR))documentPage=documentRepository.findByStatusAndSectionAndDeletedFalseOrderByCreatedAtDesc(status,user.getSection(),pageable);
-            else documentPage=documentRepository.findByStatusAndDeletedFalseOrderByCreatedAtDesc(status,pageable);
+        if (status.equals(DocumentStatus.ALL)) {
+            documentPage = documentRepository.findAll(pageable);
+        } else {
+            if (status.equals(DocumentStatus.FORWARD_TO_MODERATOR))
+                documentPage = documentRepository.findByStatusAndSectionAndDeletedFalseOrderByCreatedAtDesc(status, user.getSection(), pageable);
+            else documentPage = documentRepository.findByStatusAndDeletedFalseOrderByCreatedAtDesc(status, pageable);
         }
 
         return new ResPageable(
@@ -267,7 +268,16 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public ResPageable getAnswerFeedback(User user, Pageable pageable) {
-        Page<Document> findDocuments = documentRepository.findByStatusAndDeletedFalseOrderByCreatedAtDesc(DocumentStatus.COMPLETED, pageable);
+        Page<Document> findDocuments;
+        if (user.getStatus().equals(UserStatus.MODERATOR)){
+            findDocuments=documentRepository.findByStatusAndSectionIdAndDeletedFalseOrderByCreatedAtDesc(DocumentStatus.COMPLETED,user.getSection().getId(), pageable);
+        }else if(user.getStatus().equals(UserStatus.LISTENER)){
+            findDocuments=documentRepository.findByStatusAndCheckedByIdAndDeletedFalseOrderByCreatedAtDesc(DocumentStatus.COMPLETED,user.getId(),pageable);
+        }else if (user.getStatus().equals(UserStatus.APPLICANT)){
+            findDocuments=documentRepository.findByStatusAndApplicationCreatedByIdAndDeletedFalseOrderByCreatedAtDesc(DocumentStatus.COMPLETED,user.getId(),pageable);
+        }else {
+            findDocuments=documentRepository.findByStatusAndDeletedFalseOrderByCreatedAtDesc(DocumentStatus.COMPLETED,pageable);
+        }
         return new ResPageable(
                 findDocuments.getContent().stream().map(FeedbackResponse::response).collect(Collectors.toList()),
                 pageable.getPageNumber(),
@@ -278,50 +288,101 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public ApiResponse changeSection(UUID documentId, Long sectionId) {
-        try{
+        try {
             Document document = documentRepository.findById(documentId).orElseThrow(() -> new IllegalStateException("Document not found for set section"));
-            document.setSection(sectionRepository.findById(sectionId).orElseThrow(()->new IllegalStateException("Section not found for set section")));
+            document.setSection(sectionRepository.findById(sectionId).orElseThrow(() -> new IllegalStateException("Section not found for set section")));
             document.setStatus(DocumentStatus.FORWARD_TO_MODERATOR);
             documentRepository.save(document);
-            return new ApiResponse("Success!!",true);
-        }catch (Exception e){
+            return new ApiResponse("Success!!", true);
+        } catch (Exception e) {
             e.printStackTrace();
-            return new ApiResponse("Error!!!",false);
+            return new ApiResponse("Error!!!", false);
         }
 
     }
 
     @Override
-    public ResPageable getAllDocs(User user,DocumentStatus status, Pageable pageable) {
+    public ResPageable getAllDocs(String search, User user, DocumentStatus status, Pageable pageable) {
         Page<Document> all;
-        if (status.equals(DocumentStatus.ALL)){
-            all=documentRepository.findAllByStatusIsNotAndDeletedFalse(DocumentStatus.TRASH,pageable);
-        }else if (status.equals(DocumentStatus.INPROCESS)){
-            all=documentRepository.findAllByStatusOrStatusOrStatus(
-                    DocumentStatus.INPROCESS,
-                    DocumentStatus.WAITING,
-                    DocumentStatus.DENIED,
-                    pageable
-            );
-        }else all=documentRepository.findAllByStatus(status,pageable);
+        if (user.getStatus().equals(UserStatus.SUPER_MODERATOR)
+                || user.getStatus().equals(UserStatus.SUPER_MODERATOR_AND_MODERATOR)
+                || user.getStatus().equals(UserStatus.ADMIN)
+        ) {
+            if (status.equals(DocumentStatus.ALL)) {
+                if (search.isEmpty())
+                    all = documentRepository.findAllByStatusIsNotAndDeletedFalse(DocumentStatus.TRASH, pageable);
+                else
+                    all = documentRepository.findAllByStatusIsNotAndApplicationTitleContainingIgnoreCaseAndDeletedFalse(DocumentStatus.TRASH, search, pageable);
+            } else if (status.equals(DocumentStatus.INPROCESS)) {
+                if (search.isEmpty())
+                    all = documentRepository.findAllByStatusOrStatusOrStatus(
+                            DocumentStatus.INPROCESS,
+                            DocumentStatus.WAITING,
+                            DocumentStatus.DENIED,
+                            pageable
+                    );
+                else
+                    all = documentRepository.findAllByStatusOrStatusOrStatusAndApplicationTitleContainingIgnoreCase(
+                            DocumentStatus.INPROCESS,
+                            DocumentStatus.WAITING,
+                            DocumentStatus.DENIED,
+                            search,
+                            pageable
+                    );
+            } else {
+                if (search.isEmpty())
+                    all = documentRepository.findAllByStatusAndDeletedFalse(status, pageable);
+                else
+                    all = documentRepository.findAllByStatusAndApplicationTitleContainingIgnoreCaseAndDeletedFalse(status, search, pageable);
+            }
+        } else {
+            if (status.equals(DocumentStatus.ALL)) {
+                if (search.isEmpty())
+                    all = documentRepository.findAllByStatusIsNotAndCheckedByIdAndDeletedFalse(DocumentStatus.TRASH, user.getId(), pageable);
+                else
+                    all = documentRepository.findAllByStatusIsNotAndCheckedByIdAndApplicationTitleContainingIgnoreCaseAndDeletedFalse(DocumentStatus.TRASH, user.getId(), search, pageable);
+            } else if (status.equals(DocumentStatus.INPROCESS)) {
+                if (search.isEmpty())
+                    all = documentRepository.findAllByStatusOrStatusOrStatusAndCheckedByIdAndDeletedFalse(
+                            DocumentStatus.INPROCESS,
+                            DocumentStatus.WAITING,
+                            DocumentStatus.DENIED,
+                            user.getId(),
+                            pageable
+                    );
+                else
+                    all = documentRepository.findAllByStatusOrStatusOrStatusAndCheckedByIdAndApplicationTitleContainingIgnoreCaseAndDeletedFalse(
+                            DocumentStatus.INPROCESS,
+                            DocumentStatus.WAITING,
+                            DocumentStatus.DENIED,
+                            user.getId(),
+                            search,
+                            pageable
+                    );
+            } else {
+                if (search.isEmpty())
+                    all = documentRepository.findAllByStatusAndCheckedByIdAndDeletedFalse(status,user.getId(), pageable);
+                else
+                    all=documentRepository.findAllByStatusAndCheckedByIdAndApplicationTitleContainingIgnoreCaseAndDeletedFalse(status,user.getId(),search,pageable);
+            }
+        }
         return new ResPageable(
                 all.getContent().stream().map(document -> DocumentResponse.fromEntity(document)).collect(Collectors.toList()),
                 pageable.getPageNumber(),
                 all.getTotalPages(),
                 all.getTotalElements()
-
         );
     }
 
-    public ResPageable getAllApplicationListenerIsNull(int page, int size,User user,String sts) {
+    public ResPageable getAllApplicationListenerIsNull(int page, int size, User user, String sts) {
         Section section = sectionRepository.findById(user.getSection().getId()).orElseThrow(() -> new IllegalStateException("Section not found!!!"));
 
         Pageable pageable = CommonUtils.getPageable(page, size);
-        Page<Document> findDocuments =null;
-        if (sts.equals(UserStatus.SUPER_MODERATOR.name())){
+        Page<Document> findDocuments = null;
+        if (sts.equals(UserStatus.SUPER_MODERATOR.name())) {
             findDocuments = documentRepository.findByStatusAndAnswerIsNullAndDeletedFalseOrderByCreatedAtDesc(DocumentStatus.FORWARD_TO_SUPER_MODERATOR, pageable);
-        }else {
-            findDocuments=documentRepository.findByStatusAndSectionAndAnswerIsNullOrderByCreatedAtDesc(DocumentStatus.FORWARD_TO_MODERATOR,user.getSection(),pageable);
+        } else {
+            findDocuments = documentRepository.findByStatusAndSectionAndAnswerIsNullOrderByCreatedAtDesc(DocumentStatus.FORWARD_TO_MODERATOR, user.getSection(), pageable);
         }
         return new ResPageable(
                 findDocuments.getContent().stream().map(DocumentResponse::fromEntity).collect(Collectors.toList()),

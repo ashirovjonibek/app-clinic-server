@@ -58,6 +58,6 @@ public interface DocumentService {
 
     ApiResponse changeSection(UUID documentId, Long sectionId);
 
-    ResPageable getAllDocs(User user,DocumentStatus status, Pageable pageable);
+    ResPageable getAllDocs(String search, User user,DocumentStatus status, Pageable pageable);
 
 }

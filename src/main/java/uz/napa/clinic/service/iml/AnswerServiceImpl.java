@@ -8,6 +8,7 @@ import uz.napa.clinic.entity.Answer;
 import uz.napa.clinic.entity.Application;
 import uz.napa.clinic.entity.Document;
 import uz.napa.clinic.entity.enums.AnswerStatus;
+import uz.napa.clinic.entity.enums.ApplicationStatus;
 import uz.napa.clinic.entity.enums.DocumentStatus;
 import uz.napa.clinic.exception.BadRequestException;
 import uz.napa.clinic.payload.AnswerRequest;
@@ -36,10 +37,11 @@ public class AnswerServiceImpl implements AnswerService {
     private final ApplicationRepository applicationRepository;
     private final DocumentRepository documentRepository;
     private final JavaMailSender mailSender;
+    private final EskizServise eskizServise;
 
 
 
-    public AnswerServiceImpl(@Lazy ApplicationServiceImpl applicationService, UserRepository userRepository, AnswerRepository answerRepository, AttachmentRepository attachmentRepository, ApplicationRepository applicationRepository, DocumentRepository documentRepository, JavaMailSender mailSender) {
+    public AnswerServiceImpl(@Lazy ApplicationServiceImpl applicationService, UserRepository userRepository, AnswerRepository answerRepository, AttachmentRepository attachmentRepository, ApplicationRepository applicationRepository, DocumentRepository documentRepository, JavaMailSender mailSender, EskizServise eskizServise) {
         this.applicationService = applicationService;
         this.userRepository = userRepository;
         this.answerRepository = answerRepository;
@@ -47,6 +49,7 @@ public class AnswerServiceImpl implements AnswerService {
         this.applicationRepository = applicationRepository;
         this.documentRepository = documentRepository;
         this.mailSender = mailSender;
+        this.eskizServise = eskizServise;
     }
 
 
@@ -158,11 +161,18 @@ public class AnswerServiceImpl implements AnswerService {
         if (findAnswer.isPresent()) {
             Optional<Document> byAnswer = documentRepository.findByAnswer(findAnswer.get());
             if (byAnswer.isPresent()) {
+                Document document=byAnswer.get();
+                document.setStatus(DocumentStatus.COMPLETED);
+                document.getApplication().setStatus(ApplicationStatus.COMPLETED);
                 Answer answer = findAnswer.get();
+                answer.setDeniedMessage("");
                 answer.setStatus(AnswerStatus.COMPLETED);
                 answer.setLiked(true);
                 answerRepository.save(answer);
-                SmsSender.sendSms(byAnswer.get().getApplication().getCreatedBy().getPhoneNumber(),"Xurmatli mijos sizning burojatingiz ko'rib chiqildi. Hisobingiz orqali javobni ko'rishingiz mumkin!!!");
+                documentRepository.save(document);
+                eskizServise.sendSms("Xurmatli mijos sizning murojatingiz" +
+                        " ko'rib chiqildi. https://clinic.proacademy.uz/auth/login hovolasiga o'tib o'z hisobingiz orqali javobni ko'rishingiz mumkin!!!" +
+                        "O'zbekiston Respublikasi Bosh prokraturasi Akademyasi Yuridik klinikasi",byAnswer.get().getApplication().getCreatedBy().getPhoneNumber());
                 return new ApiResponse("Answer sended to Applicant", true);
             } else {
                 throw new BadRequestException("Document not found by Answer ID: " + id);

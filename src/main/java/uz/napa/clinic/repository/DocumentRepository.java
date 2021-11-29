@@ -43,6 +43,12 @@ public interface DocumentRepository extends JpaRepository<Document, UUID> {
 
     Page<Document> findByStatusAndDeletedFalseOrderByCreatedAtDesc(DocumentStatus status,Pageable pageable);
 
+    Page<Document> findByStatusAndSectionIdAndDeletedFalseOrderByCreatedAtDesc(DocumentStatus status,Long id,Pageable pageable);
+
+    Page<Document> findByStatusAndCheckedByIdAndDeletedFalseOrderByCreatedAtDesc(DocumentStatus status,UUID id,Pageable pageable);
+
+    Page<Document> findByStatusAndApplicationCreatedByIdAndDeletedFalseOrderByCreatedAtDesc(DocumentStatus status,UUID id,Pageable pageable);
+
     Page<Document> findByAnswerInAndDeletedFalseAndCheckedByOrderByCreatedAtDesc(List<Answer> answer, Pageable pageable, User user);
 
     Page<Document> findByCheckedByAndStatusAndDeletedFalseAndAnswerIsNullOrderByCreatedAtDesc(User user, DocumentStatus status, Pageable pageable);
@@ -84,7 +90,25 @@ public interface DocumentRepository extends JpaRepository<Document, UUID> {
 
     Page<Document> findAllByStatusIsNotAndDeletedFalse(DocumentStatus status, Pageable pageable);
 
+    Page<Document> findAllByStatusIsNotAndApplicationTitleContainingIgnoreCaseAndDeletedFalse(DocumentStatus status,String search, Pageable pageable);
+
+    Page<Document> findAllByStatusIsNotAndCheckedByIdAndDeletedFalse(DocumentStatus status,UUID id, Pageable pageable);
+
+    Page<Document> findAllByStatusIsNotAndCheckedByIdAndApplicationTitleContainingIgnoreCaseAndDeletedFalse(DocumentStatus status,UUID id,String search, Pageable pageable);
+
     Page<Document> findAllByStatusOrStatusOrStatus(DocumentStatus status,DocumentStatus status1,DocumentStatus status2, Pageable pageable);
 
-    Page<Document> findAllByStatus(DocumentStatus status, Pageable pageable);
+    Page<Document> findAllByStatusOrStatusOrStatusAndApplicationTitleContainingIgnoreCase(DocumentStatus status,DocumentStatus status1,DocumentStatus status2,String search, Pageable pageable);
+
+    Page<Document> findAllByStatusOrStatusOrStatusAndCheckedByIdAndDeletedFalse(DocumentStatus status,DocumentStatus status1,DocumentStatus status2,UUID id, Pageable pageable);
+
+    Page<Document> findAllByStatusOrStatusOrStatusAndCheckedByIdAndApplicationTitleContainingIgnoreCaseAndDeletedFalse(DocumentStatus status,DocumentStatus status1,DocumentStatus status2,UUID id, String search, Pageable pageable);
+
+    Page<Document> findAllByStatusAndDeletedFalse(DocumentStatus status, Pageable pageable);
+
+    Page<Document> findAllByStatusAndApplicationTitleContainingIgnoreCaseAndDeletedFalse(DocumentStatus status,String search, Pageable pageable);
+
+    Page<Document> findAllByStatusAndCheckedByIdAndDeletedFalse(DocumentStatus status, UUID id, Pageable pageable);
+
+    Page<Document> findAllByStatusAndCheckedByIdAndApplicationTitleContainingIgnoreCaseAndDeletedFalse(DocumentStatus status, UUID id, String search, Pageable pageable);
 }

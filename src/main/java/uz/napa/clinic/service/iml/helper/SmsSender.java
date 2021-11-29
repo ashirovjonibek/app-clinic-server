@@ -5,8 +5,16 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import uz.napa.clinic.payload.ResTokenSms;
+import uz.napa.clinic.repository.EskizRepository;
 
 public class SmsSender {
+    private final
+    EskizRepository repository;
+
+    public SmsSender(EskizRepository repository) {
+        this.repository = repository;
+    }
+
     public static void sendSms(String phone,String message){
         String url = "http://notify.eskiz.uz/api/auth/login";
         RestTemplate restTemplate = new RestTemplate();
@@ -34,7 +42,7 @@ public class SmsSender {
         headers1.setContentType(MediaType.MULTIPART_FORM_DATA);
         headers1.add("Authorization","Bearer "+resTokenSms.getData());
         MultiValueMap<String, String> data1= new LinkedMultiValueMap<String, String>();
-        data1.add ("mobile_phone", phone);
+        data1.add ("mobile_phone", phone.substring(1));
         data1.add("message", message);
         data1.add("from", "4546");
         HttpEntity<MultiValueMap<String, String>> requestEntity1 = new HttpEntity<MultiValueMap<String, String>>(data1, headers1);
