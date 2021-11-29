@@ -187,7 +187,7 @@ public class MessageCenterServiceImpl implements MessageCenterService {
             return new ApiResponse("ok", true, counter);
         } else if (user.getStatus().equals(UserStatus.MODERATOR)) {
             counter.put("setListener", repository.findByStatusAndSectionIdAndDeletedFalse(DocumentStatus.FORWARD_TO_MODERATOR, user.getSection().getId()).size());
-            counter.put("checkAnswer", repository.findBySectionIdAndAnswerStatusAndDeletedFalse(user.getSection().getId(), AnswerStatus.WAITING).size());
+            counter.put("checkAnswer", repository.findByStatusAndDeletedFalseAndCheckedBySectionOrderByCreatedAtDesc(DocumentStatus.WAITING,user.getSection()).size());
             return new ApiResponse("ok", true, counter);
         } else {
             counter.put("setSection", repository.findByStatusAndDeletedFalse(DocumentStatus.FORWARD_TO_SUPER_MODERATOR).size());
