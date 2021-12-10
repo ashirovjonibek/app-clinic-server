@@ -30,11 +30,13 @@ public class WordsServiceImpl implements WordsService {
         Words word=new Words();
         word.setName(langRepository.save(new Lang(
                 request.getNameuz(),
+                request.getNameuzCyr(),
                 request.getNameru(),
                 request.getNameen()
         )));
         word.setUrl(langRepository.save(new Lang(
                 request.getUrluz(),
+                request.getUrluzCyr(),
                 request.getUrlru(),
                 request.getUrlen()
         )));

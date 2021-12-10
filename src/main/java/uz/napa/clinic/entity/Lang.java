@@ -18,14 +18,18 @@ public class Lang {
     @Column(columnDefinition = "text")
     private String uz;
 
+     @Column(columnDefinition = "text")
+    private String uzCyr;
+
     @Column(columnDefinition = "text")
     private String ru;
 
     @Column(columnDefinition = "text")
     private String en;
 
-    public Lang(String uz, String ru, String en) {
+    public Lang(String uz,String uzCyr, String ru, String en) {
         this.uz = uz;
+        this.uzCyr=uzCyr;
         this.ru = ru;
         this.en = en;
     }

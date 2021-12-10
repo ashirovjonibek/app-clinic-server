@@ -12,11 +12,15 @@ public class WordRequest {
 
     private String nameuz;
 
+    private String nameuzCyr;
+
     private String nameru;
 
     private String nameen;
 
     private String urluz;
+
+    private String urluzCyr;
 
     private String urlru;
 
